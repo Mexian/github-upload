@@ -1,0 +1,5 @@
+"0","# get results of only the 21st through 24th courses for brevity’s sake"
+"0","regression_points <- get_regression_points(score_model) %>%"
+"0","  filter(ID == 21:24)"
+"0",""
+"0","regression_points"

@@ -1,0 +1,320 @@
+---
+title: "Hypothesis Testing"
+author: "El Mex"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(infer)
+library(moderndive)
+library(nycflights13)
+library(ggplot2movies)
+```
+
+# Hypothesis Testing
+
+## Promotions activity
+
+### Does gender affect promotions at a bank?
+
+<br>
+**Say you are working at a bank in the 1970s and you are submitting your résumé to apply for a promotion. Will your gender affect your chances of getting promoted? To answer this question, we’ll focus on data from a study published in the *Journal of Applied Psychology* in 1974. This data is also used in the OpenIntro series of statistics textbooks.**
+
+**The `promotions` data frame on `moderndive` contains the data on the 48 applicants. Let's explore it by looking at six randomly selected rows:**
+
+```{r}
+glimpse(promotions)
+
+promotions %>% 
+  sample_n(size = 6) %>% 
+  arrange(id)
+```
+
+<br>
+**Perform an exploratory data analysis of the relationship between the two categorical variables `decision` and `gender`. You can use a stacked barplot.**
+
+```{r}
+ggplot(promotions, aes(x = gender, fill = decision)) +
+  geom_bar() +
+  labs(x = "Gender of name on résumé")
+```
+
+<br>
+**It seems résumés with female names were much less likely to be accepted for promotion. Let’s quantify these promotion rates by computing the proportion of résumés accepted for promotion for each group.**
+
+```{r}
+# Use of the tally() function here which is a shortcut for summarize(n = n()) to get counts
+promotions %>% 
+  group_by(gender, decision) %>% 
+  tally()
+```
+
+<br>
+**Of the 24 male résumés, 21 were promoted (21/24 = 0.875 = 87.55%). On the other hand, of the 24 female résumés, 14 were selected for promotion (14/24 = 0.583 = 58.3%).**
+
+**Does this provide conclusive evidence that there is gender discrimination in promotions at banks? Could a difference in promotion rates of 29.2% still occur by chance, even in a hypothetical world where no gender-based discrimination existed? In other words, what is the role of sampling variation in this hypothesized world?**
+
+<br>
+
+### Shuffling once
+
+**Imagine a hypothetical universe where no gender discrimination in promotions existed. If these gender labels were irrelevant, then we could randomly reassign them by “shuffling” them to no consequence!**
+
+**We’ve saved one such shuffling in the `promotions_shuffled` data frame. Explore it and create the previous barplot.**
+
+```{r}
+glimpse(promotions_shuffled)
+```
+
+<br>
+```{r}
+ggplot(promotions_shuffled, aes(x = gender, fill = decision)) +
+  geom_bar() +
+  labs(x = "Gender of résumé name")
+```
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/fig94.jpg)
+
+<br>
+**Compared to the original data in the left barplot, the new “shuffled” data in the right barplot has promotion rates that are much more similar.**
+
+**Let’s also compute the proportion of résumés accepted for promotion for each group:**
+
+```{r}
+promotions_shuffled %>% 
+  group_by(gender, decision) %>% 
+  tally() # Same as summarize(n = n())
+```
+<br>
+
+
+**In this hypothetical universe of no discrimination, 18/24 = 0.75 = 75% of males were promoted. By contrast, 17/24 = 0.78 = 70.8% of females were promoted. It appears that male names were selected for promotion at a rate that was 0.75 - 0.708 = 0.042 = 4.2% different than females.**
+
+**This difference in rates is not the same as the difference in rates of 0.292 = 29.2% we originally observed. This is once again due to sampling variation.**
+
+<br>
+
+### Understanding hypothesis tests
+
+<br>
+
+1. A hypothesis is a statement about the value of an unknown population parameter.
+
+2. A hypothesis test consists of a test between two competing hypotheses: (1) a null hypothesis $H_0$ vs (2) an alternative hypothesis $H_1$.
+
+    + If as in the example we think men are promoted at a higher rate, we call such alternative hypotheses *one-sided alternatives*. If someone else however does not share such suspicions and only wants to investigate that there is a difference, whether higher or lower, they would set what is known as a *two-sided alternative*.
+
+    + $H_0:$ men and women are promoted at the same rate **VERSUS** $H_1:$ men are promoted at a haigher rate than women.
+  
+    + Mathematical notation: $H_0: p_m - p_f = 0$ vs $H_1: p_m - p_f > 0$, if two-sided alternative: $p_m - p_f ≠ 0$.
+
+3. A **test statistic** is a point estimate/sample statistic formula used for hypothesis testing. Note that a sample statistic is merely a summary statistic based on a sample of observations. Here, the samples would be the $n_m = 24$ resumes with males and $n_f = 24$ resumes of female, so the point estimate is the difference in sample proportions $\hat{p}_m - \hat{p}_f$.
+
+4. The observed **test statistic** is the value of the test statistic that we observed in real life. In our data, it was the observed difference of $\hat{p}_m - \hat{p}f = 0.875 - 0.583 = 0.292 = 29.2%$ in favor of male resumes.
+
+5. The **null distribution** is the sampling distribution of the test statistic assuming the null hypothesis $H_0$ is true. 
+
+    + Assuming the null hypothesis $H_0$, also stated as “Under $H_0$", how does the test statistic vary due to sampling variation? In our case, how will the difference in sample proportions $\hat{p}_m - \hat{p}_f$ vary due to sampling under  $H_0$?.
+
+6. The *p*-value is the probability of obtaining a test statistic just as extreme or more extreme than the observed test statistic assuming the null hypothesis $H_0$ is true.
+
+7. In many hypothesis testing procedures, it is commonly recommended to set the **significance level** of the test beforehand (0.1, 0.01, and 0.05).
+
+<br>
+
+## Conducting hypothesis tests
+
+![](C:/Users/Den/Desktop/Learning/grap99.jpg)
+
+<br>
+
+**We’ll use a pre-specified significance level $α = 0.05$ for this hypothesis test.**
+
+<br>
+
+### `infer` package workflow 
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/1speci.jpg)
+
+<br>
+
+**Notice how the `promotions` data itself doesn’t change, but the `Response: decision (factor)` and `Explanatory: gender (factor)` meta-data do.**
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/step2hy.jpg)
+
+![](C:/Users/Den/Desktop/Learning/resultstep2.jpg)
+<br>
+
+**Again, the data has not changed yet. This will occur at the upcoming `generate()` step**.
+
+![](C:/Users/Den/Desktop/Learning/termsindep.jpg)
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/3replic.jpg)
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/4sts.jpg)
+
+```{r}
+null_distribution <- promotions %>% 
+  specify(formula = decision ~ gender, success = "promoted") %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in props", order = c("male", "female"))
+
+head(null_distribution, 10)
+```
+
+<br>
+
+**Observe that we have 1000 values of stat, each representing one instance of  $\hat{p}_m - \hat{p}_f$ in a hypothesized world of no gender discrimination. What was the observed difference in promotion rates? In other words, what was the observed test statistic $\hat{p}_m - \hat{p}_f$?**
+
+```{r}
+# Let’s save this in obs_diff_prop:
+obs_diff_prop <- promotions %>% 
+  specify(decision ~ gender, success = "promoted") %>% 
+  calculate(stat = "diff in props", order = c("male", "female")) 
+  
+  head(obs_diff_prop, 10)
+```
+<br>
+
+![](C:/Users/Den/Desktop/Learning/chart5.jpg)
+
+```{r}
+visualize(null_distribution, bins = 10)
+```
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/def5.jpg)
+
+```{r}
+visualize(null_distribution, bins = 10) +
+  shade_p_value(obs_stat = obs_diff_prop, direction = "right")
+```
+
+<br>
+
+**The solid dark line marks 0.292 = 29.2%. However, what does the shaded-region correspond to? This is the *p*-value:**
+
+> A *p*-value is the probability of obtaining a test statistic just as or more extreme than the observed test statistic assuming the null hypothesis $H_0$ is true.
+
+**So judging by the shaded region in Figure 9.11, it seems we would somewhat rarely observe differences in promotion rates of 0.292 = 29.2% or more in a hypothesized universe of no gender discrimination. In other words, the *p*-value is somewhat small. Hence, we would be inclined to reject this hypothesized universe, or using statistical language we would “reject $H_0$”.**
+
+**What fraction of the null distribution is shaded? In other words, what is the exact value of the *p*-value?**
+
+```{r}
+# use get_p_value()
+null_distribution %>% 
+  get_p_value(obs_stat = obs_diff_prop, direction = "right")
+```
+
+<br>
+
+**Keeping the definition of a *p*-value in mind, the probability of observing a difference in promotion rates as large as 0.292 = 29.2% due to sampling variation alone in the null distribution is 0.027 = 2.7%. Since this *p*-value is smaller than our pre-specified significance level α = 0.05, we reject the null hypothesis $H_0: p_m - p_f = 0$. In other words, this *p*-value is sufficiently small to reject our hypothesized universe of no gender discrimination. We instead have enough evidence to change our mind in favor of gender discrimination being a likely culprit here.**
+
+<br>
+
+### Comparison with confidence intervals
+
+<br>
+**To create the bootstrap distribution needed to construct a 95% confidence interval to our problem, we only need to make two changes. First, we remove the `hypothesize()` step. Second, we switch the `type` of resampling in the `generate()` step to be `"bootstrap"` instead of `"permute"`.**
+
+```{r}
+bootstrap_distribution <- promotions %>% 
+  specify(formula = decision ~ gender, success = "promoted") %>%
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in props", order = c("male", "female"))
+```
+<br>
+**Now let's compute the percentile-based confidence intervals.**
+
+```{r}
+percentile_ci <- bootstrap_distribution %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+
+percentile_ci
+```
+<br>
+**We are 95% “confident” that the true difference in population proportions  $p_m - p_f$ is between (0.034, 0.524).**
+
+```{r}
+# visualize it
+visualize(bootstrap_distribution) +
+  shade_confidence_interval(endpoints = percentile_ci)
+```
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/confinew.jpg)
+```{r}
+se_ci <- bootstrap_distribution %>% 
+  get_confidence_interval(level = 0.95, type = "se",
+                          point_estimate = obs_diff_prop)
+
+se_ci
+```
+
+<br>
+```{r}
+# visualize it
+visualize(bootstrap_distribution) +
+  shade_confidence_interval(endpoints = se_ci)
+```
+
+<br>
+
+### “There is only one test”
+
+<br>
+**Let’s recap the steps:**
+
+1. `specify()` the variables of interest in your data frame.
+
+1. `hypothesize()` the null hypothesis $H_0$. In other words, set a “model for the universe” assuming $H_0$ is true.
+
+1. `generate()` shuffles assuming $H_0$ is true. In other words, simulate data assuming $H_0$ is true.
+
+1. `calculate()` the test statistic of interest, both for the observed data and your simulated data.
+
+1. `visualize()` the resulting null distribution and compute the *p*-value by comparing the null distribution to the observed test statistic.
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/frame.jpg)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

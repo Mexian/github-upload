@@ -1,0 +1,4 @@
+"0",""
+"0","# n = 50"
+"0","virtual_prop_red_50 %>% "
+"0","  summarize(sd = sd(prop_red))"

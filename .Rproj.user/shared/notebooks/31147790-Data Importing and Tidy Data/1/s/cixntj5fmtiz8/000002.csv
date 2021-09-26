@@ -1,0 +1,5 @@
+"0","# import the "".csv"" file by using ""read_csv()"" function"
+"0","library(readr)"
+"0","dem_score <- read_csv(""dem_score.csv"")"
+"0",""
+"0","head(dem_score)"

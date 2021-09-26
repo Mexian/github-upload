@@ -1,0 +1,5 @@
+"0","# another way to get the same results"
+"0","drinks_smaller %>% "
+"0","  pivot_longer(names_to = ""type"","
+"0","               values_to = ""servings"","
+"0","               cols = c(beer, spirit, wine))"

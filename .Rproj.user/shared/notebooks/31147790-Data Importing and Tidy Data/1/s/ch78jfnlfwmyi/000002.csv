@@ -1,0 +1,4 @@
+"0","guat_dem <- dem_score %>% "
+"0","  filter(country == ""Guatemala"")"
+"0",""
+"0","guat_dem"

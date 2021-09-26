@@ -1,0 +1,327 @@
+---
+title: "Multiple Regression"
+author: "El Mex"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(ISLR)
+```
+
+# Multiple regression
+
+As in our previous lession, our outcome variable will still be teaching score, but we’ll now include two different explanatory variables: age and gender. Could it be that instructors who are older receive better teaching evaluations from students? Or could it instead be that younger instructors receive better evaluations? Are there differences in evaluations given by students for instructors of different genders?
+
+We will have:
+
+1. A numerical outcome variable \(y\), the instructor’s teaching score
+
+1. Two explanatory variables:
+  
+    + A numerical explanatory variable \(x_1\), the instructor’s age
+    
+    + A categorical explanatory variable \(x_2\), the instructor’s (binary) gender
+
+## One numerical and one categorical explanatory variable
+
+### Exploratory data analysis
+
+<br>
+**Use the `evals` data frame and `select()` the columns: `ID`, `score`, `age`, `gender`**
+
+```{r}
+# save this data in a new data frame called: `evals_ch6`
+evals_ch6 <- evals %>% 
+  select(ID, score, age, gender)
+```
+<br>
+1. **Looking at the raw data values**
+
+```{r}
+# get a glimpse
+glimpse(evals_ch6)
+```
+
+**Display a random sample of only 5 rows (each row is one course)**
+
+```{r}
+evals_ch6 %>% sample_n(size = 5)
+```
+
+<br>
+2. **Computing summary statistics**
+
+```{r}
+# select the variables of interest in our model and then skim()
+evals_ch6 %>% 
+  select(score, age, gender) %>%
+  skim()
+```
+
+**Observe that we have no missing data, that there are 268 courses taught by male instructors and 195 courses taught by female instructors, and that the average instructor age is 48.37. Recall that each row represents a particular course and that the same instructor often teaches more than one course**
+
+**Let’s compute the correlation coefficient between our two numerical variables: `score` and `age`**
+
+```{r}
+evals_ch6 %>% 
+  get_correlation(formula = score ~ age)
+```
+<br>
+3. **Creating data visualizations**
+
+**The outcome variable `score` and explanatory variable `age` are both numerical, hence we’ll use a scatterplot to display their relationship. How can we incorporate the categorical variable `gender`, however? By `mapping` the variable `gender` to the `color` aesthetic**
+
+```{r}
+ggplot(evals_ch6, aes(x = age, y = score, color = gender)) +
+  geom_point() +
+  labs(x = "Age", y = "Teaching Score", color = "Gender") +
+  geom_smooth(method = lm, se = FALSE) 
+```
+
+
+**There are almost no women faculty over the age of 60 as evidenced by lack of red dots above  $x = 60$. Second, while both regression lines are negatively sloped with age (i.e., older instructors tend to have lower scores), the slope for age for the female instructors is more negative**
+
+### Interaction model
+
+**First “fit” the model using the `lm()` “linear model” function and then we apply the `get_regression_table()` function. Our model formula won’t be of the form `y ~ x`, but rather of the form `y ~ x1 * x2`**
+
+```{r}
+# fit regression model:
+score_model_interaction <- lm(score ~ age * gender, data = evals_ch6)
+
+# get regression table:
+get_regression_table(score_model_interaction)
+```
+
+<br>
+**Female instructors are the “baseline for comparison” group (alphabetically ordered). Thus, `intercept`is the intercept for only the female instructors. Same for `age`, the slope for age only for the female instructors**
+
+**The red regression line (female) has an intercept of 4.883 and slope for age of -0.018. Remember that while the intercept has a mathematical interpretation, it has no practical interpretation here since instructors can’t have zero age**
+
+**The value for `gendermale` of -0.446 is not the intercept for the male instructors, but rather the offset in intercept for male instructors relative to female instructors. The intercept for the male instructors is `intercept + gendermale` = 4.883 + (-0.446) = 4.883 - 0.446 = 4.437**
+
+**Same for `age:gendermale` = 0.014 is not the slope for age for the male instructors the slope for age for the male instructors is `age + age:gendermale` $= -0.018 + 0.014 = -0.004$. Thus, the blue regression line has intercept 4.437 and slope for age of -0.004**
+<br>
+<br>
+
+:Comparison of intercepts and slopes for interaction model
+
+| Gender | Intercept | Slope for age |
+|--------|:----------|:-------------:|
+| Female instructors |  4.883        | -0.018 |
+| Male instructors   |  4.437        | -0.004 |
+
+<br>
+**Since the slope for age for the female instructors was -0.018, it means that on average, a female instructor who is a year older would have a teaching score that is 0.018 units *lower*. For the male instructors, however, the corresponding associated decrease was on average only 0.004 units. While both slopes for age were negative, the slope for age for the female instructors is more negative**
+
+![](C:/Users/Den/Desktop/Learning/regre2.jpg)
+
+
+![](C:/Users/Den/Desktop/Learning/regre3.jpg)
+
+![](C:/Users/Den/Desktop/Learning/explainter.jpg)
+
+<br>
+
+### Parallel slopes model
+
+<br>
+**When creating regression models with one numerical and one categorical explanatory variable, another type of model we can use is known as a parallel slopes model. Unlike interaction models where the regression lines can have different intercepts and different slopes, parallel slopes models still allow for different intercepts but force all lines to have the same slope. The resulting regression lines are thus parallel**
+
+**Use `geom_parallel_slopes()` included in the `moderndive` package**
+
+```{r}
+ggplot(evals_ch6, aes(x = age, y = score, color = gender)) +
+  geom_point() +
+  labs(x = "Age", y = "Teaching Scores", color = "Gender") +
+  geom_parallel_slopes(se = FALSE)
+```
+
+**We now have parallel lines corresponding to the female and male instructors, respectively: here they have the same negative slope. Older instructors will tend to receive lower teaching scores than instructors who are younger. Since the lines are parallel, the associated penalty for being older is assumed to be the same for both female and male**
+
+**On the other hand, the two lines have different intercepts as the blue line is higher than the red line. It tells us that female instructors tended to receive lower teaching scores than male instructors**
+
+<br>
+**To obtain the exact values of the two intercepts and slope, let's fit the model and apply `get_regression_table()`. Unlike the interaction model which had a model formula of the form `y ~ x1 * x2`, our model formula is now of the form `y ~ x1 + x2`**
+
+```{r}
+# fit regression model:
+score_model_parallel_slopes <- lm(score ~ age + gender, data = evals_ch6)
+
+# get regression table:
+get_regression_table(score_model_parallel_slopes)
+```
+<br>
+**The red regression line corresponding to the female instructors has an intercept of 4.484 while the blue regression line corresponding to the male instructors has an intercept of 4.484 + 0.191 = 4.675. Once again, since there aren’t any instructors of age 0, the intercepts only have a mathematical interpretation but no practical one. However, we now only have a single slope for age of -0.009. This is telling us that an instructor who is a year older than another instructor received a teaching score that is on average 0.009 units lower. This penalty for being of advanced age applies equally to both female and male instructors**
+
+![](C:/Users/Den/Desktop/Learning/paraexp.jpg)
+
+![](C:/Users/Den/Desktop/Learning/compchart.jpg)
+
+**Looking at the left-hand plot in Figure 6.3, the two lines definitely do not appear to be parallel, so why would we force them to be parallel? For this data, we agree! It can easily be argued that the interaction model on the left is more appropriate. However, later on model selection, we’ll present an example where it can be argued that the case for a parallel slopes model might be stronger**
+
+### Observed/fitted values and residuals
+
+<br>
+**Say, you have a female instructor who is 36 years old and a male who is 59 years old. What would their fitted value $\hat{y}$ be?**
+
+**Let's mark the points of the ages on the scatterplot by drawing dot lines**
+
+<br>
+![](C:/Users/Den/Desktop/Learning/scater.jpg)
+
+**We can use the equations of the two regression lines:**
+
+![](C:/Users/Den/Desktop/Learning/scores1.jpg)
+
+<br>
+```{r}
+regression_points <- get_regression_points(score_model_interaction)
+
+head(regression_points, 10)
+```
+
+![](C:/Users/Den/Desktop/Learning/resultpoints.jpg)
+
+<br>
+**Compute the observed values, fitted values, and residuals for the parallel slopes model we saved in `score_model_parallel_slopes`**
+
+```{r}
+regression_points_parallel <- get_regression_points(score_model_parallel_slopes)
+
+head(regression_points_parallel, 10)
+```
+
+<br>
+
+## Two numerical explanatory variables
+
+<br>
+**We'll use the `Credit` dataset from the `ISLR` package whichis the outcome variable of interest is the credit card debt of 400 individuals**
+
+**In this section, we’ll fit a regression model where we have:**
+
+1. A numerical outcome variable $y$, the cardholder’s credit card debt
+
+2. Two explanatory variables:
+    
+    + One numerical explanatory variable $x_1$, the cardholder’s credit limit 
+    
+    + Another numerical explanatory variable $x_2$, the cardholder’s income (in thousands of dollars)
+
+### Exploratory data analysis
+
+<br>
+**`select()` the subset of the variables we’ll consider in this chapter, and save this data in the new data frame `credit_ch6`. Also select `Balance` variable and save it with a new name: `debt` so it is easy to understand**
+
+```{r}
+credit_ch6 <- Credit %>% as_tibble() %>% 
+  select(ID, debt = Balance, credit_limit = Limit,
+         income = Income, credit_rating = Rating, age = Age)
+
+glimpse(credit_ch6)
+```
+
+**Let’s look at a random sample of five out of the 400 credit card holders**
+
+```{r}
+credit_ch6 %>% sample_n(size = 5)
+```
+
+**Let's now compute summary statistics**
+
+```{r}
+credit_ch6 %>% 
+  select(debt, credit_limit, income) %>% skim()
+```
+
+**`debt`: the mean and median credit card debt are $520.01 and $459.50, respectively, and that 25% of card holders had debts of $68.75 or less. Let’s now look at one of the explanatory variables `credit_limit`: the mean and median credit card limit are $4735.6 and $4622.50, respectively, while 75% of card holders had incomes of $57,470 or less**
+
+**We can compute the correlation coefficient between the different possible pairs of these variables as they are numerical**
+
+```{r}
+credit_ch6 %>% get_correlation(debt ~ credit_limit)
+credit_ch6 %>% get_correlation(debt ~ income)
+```
+**Or we can simultaneously compute them by returning a correlation matrix**
+
+```{r}
+credit_ch6 %>% select(debt, credit_limit, income) %>% 
+  cor()
+```
+
+![](C:/Users/Den/Desktop/Learning/expl1.jpg)
+
+<br>
+
+**Let’s visualize the relationship of the outcome variable with each of the two explanatory variables in two separate plots**
+
+```{r}
+ggplot(credit_ch6, aes(x = credit_limit, y = debt)) +
+  geom_point() +
+  labs(x = "Credit limit (in $)", 
+       y = "Credit card debt (in $)",
+       title = "Debt and credit limit") +
+  geom_smooth(method = lm, se = FALSE)
+
+ggplot(credit_ch6, aes(x = income, y = debt)) +
+  geom_point() +
+  labs(x = "Income (in $1000)", y = "Credit card debt (in $)", 
+       title = "Debt and income") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+**Observe there is a positive relationship between credit limit and credit card debt: as credit limit increases so also does credit card debt. This is consistent with the strongly positive correlation coefficient of 0.862 we computed earlier. In the case of income, the positive relationship doesn’t appear as strong, given the weakly positive correlation coefficient of 0.464**
+
+**To visualize the joint relationship of all three variables simultaneously, we need a 3-dimensional (3D) scatterplot:**
+
+1. The numerical outcome variable $y$ `debt` is on the vertical axis
+
+2. The two numerical explanatory variables, $x_1$ `income` and $x_2$ `credit_limit`,  are on the two axes that form the bottom plane
+
+![](C:/Users/Den/Desktop/Learning/3dscat.jpg)
+
+<br>
+
+###  Regression plane
+
+<br>
+**We’ll only consider a model fit with a formula of the form `y ~ x1 + x2`**
+
+```{r}
+# fit regression model:
+debt_model <- lm(debt ~ credit_limit + income, data = credit_ch6)
+
+# get regression table:
+get_regression_table(debt_model)
+```
+
+<br>
+**The `intercept` value is -$385.179. This intercept represents the credit card debt for an individual who has `credit_limit` of $0 and `income` of $0. In our data, however, the intercept has no practical interpretation since no individuals had `credit_limit` or `income` values of $0**
+
+**Second, the `credit_limit` value is $0.264. Taking into account all the other explanatory variables in our model, for every increase of one dollar in `credit_limit`, there is an associated increase of on average $0.26 in credit card debt**
+
+**Third, `income` = -$7.66. Taking into account all other explanatory variables in our model, for every increase of one unit of `income` ($1000 in actual income), there is an associated decrease of, on average, $7.66 in credit card debt**
+
+![](C:/Users/Den/Desktop/Learning/expl2.jpg)
+
+### Observed/fitted values and residuals
+
+<br>
+**Let’s also compute all fitted values and residuals for our regression model using the `get_regression_points()`**
+
+![](C:/Users/Den/Desktop/Learning/ecutable.jpg)
+
+
+

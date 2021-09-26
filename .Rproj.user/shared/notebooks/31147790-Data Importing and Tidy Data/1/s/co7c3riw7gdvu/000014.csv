@@ -1,0 +1,6 @@
+"0",""
+"0","# since these three columns appear one after another in ""drinks_smaller"", we could also do this:"
+"0","drinks_smaller %>% "
+"0","  pivot_longer(names_to = ""type"", "
+"0","               values_to = ""servings"", "
+"0","               cols = beer:wine)"

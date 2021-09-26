@@ -1,0 +1,2 @@
+"0","visualize(bootstrap_distribution) +"
+"0","  shade_confidence_interval(endpoints = standard_error_ci)"

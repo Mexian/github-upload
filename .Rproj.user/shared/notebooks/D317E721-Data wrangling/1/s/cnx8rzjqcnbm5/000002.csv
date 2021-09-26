@@ -1,0 +1,4 @@
+"0","flight_arr_times <- flights %>% "
+"0","  select(month:day, arr_time:sched_arr_time)"
+"0",""
+"0","head(flight_arr_times)"

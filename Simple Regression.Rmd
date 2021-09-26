@@ -1,0 +1,425 @@
+---
+title: "Simple Regression"
+author: "El Mex"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(gapminder)
+```
+# Basics of regression
+
+## One numerical explanatory variable
+
+### Exploratory data analysis
+<br>
+<br>
+
+**Researchers at the University of Texas in Austin, Texas (UT Austin) tried to answer the following research question: what factors explain differences in instructor teaching evaluation scores? To this end, they collected instructor and course information on 463 courses**
+
+**Let's use *simple linear regression* with two variables:**
+
+1. A numerical outcome variable `y` (the instructor’s teaching score)
+
+1. A single numerical explanatory variable `x` (the instructor’s “beauty” score)
+
+```{r}
+# explore the "evals" built-in data frame in "moderndive". Then save the variables in 
+# a new data frame called "evals_ch5"
+glimpse(evals)
+```
+<br>
+<br>
+```{r}
+# select columns ID, score, bty_avg and age
+evals_ch5 <- evals %>% 
+  select(ID, score, bty_avg, age)
+
+glimpse(evals_ch5)
+```
+<br>
+<br>
+
+**`Summarize()`and get the `mean()` & `median()`of `score` and `bty_avg`**
+
+```{r}
+evals_ch5 %>% 
+  summarize(mean_bty_avg = mean(bty_avg), mean_score = mean(score),
+            median_bty_avg = median(bty_avg), median_score = median(score))
+```
+<br>
+<br>
+**What if we want other summary statistics as well, such as the standard deviation (a measure of spread), the minimum and maximum values, and various percentiles?**
+
+**Typing out all these summary statistic functions in `summarize()` would be long and tedious. Instead, let’s use the convenient `skim()` function from the `skimr` package. This function takes in a data frame, “skims” it, and returns commonly used summary statistics**
+
+```{r}
+evals_ch5 %>% 
+  select(score, bty_avg) %>% 
+  skim()
+```
+<br>
+<br>
+**The `skim()` function only returns what are known as *univariate* summary statistics: functions that take a single variable and return some numerical summary of that variable**
+
+**when the two variables are numerical, we can compute the *correlation coefficient*. A correlation coefficient is a quantitative expression of the *strength of the linear relationship between two numerical variables*. Its value ranges between -1 and 1**
+
+**Use `get_correlation()` function in the `moderndive` package**
+
+```{r}
+# put the name of the outcome variable on the left-hand side of the ~ “tilde” sign, 
+# while putting the name of the explanatory variable on the right-hand side
+evals_ch5 %>% 
+  get_correlation(formula = score ~ bty_avg)
+```
+**An alternative way**
+```{r eval=FALSE}
+evals_ch5 %>% 
+  summarize(correlation = cor(score, bty_avg))
+```
+**Let's make a scatterplot by using `geom_point()`**
+
+```{r}
+ggplot(evals_ch5, aes(x = bty_avg, y = score)) +
+  geom_point() +
+  labs(x = "Beauty Score",
+       y = "Teaching Score",
+       title = "Scatterplot of the relationship of teaching and beauty scores")
+```
+
+**Observe that most “beauty” scores lie between 2 and 8, while most teaching scores lie between 3 and 5. Furthermore, while opinions may vary, it is our opinion that the relationship between teaching score and “beauty” score is “weakly positive.” This is consistent with our earlier computed correlation coefficient of 0.187**
+
+**There appear to be six points in the top-right of this plot highlighted in the box. However, this is not actually the case, as this plot suffers from *overplotting*. Use `geom_jitter()`instead.**
+
+```{r}
+ggplot(evals_ch5, aes(x = bty_avg, y = score)) +
+  geom_jitter() +
+  labs(x = "Beauty Score", y = "Teaching Score",
+       title = "Scatterplot of relationship of teaching and beauty scores")
+```
+<br>
+<br>
+**For simplicity, keep using the unjitter scatterplot. Let's add a "best-fitting line" by using `geom_smooth(method = "lm", se = FALSE)`**
+
+```{r}
+# method = "lm" argument sets the line to be a “linear model.” The se = FALSE argument suppresses 
+# standard error uncertainty bars
+ggplot(evals_ch5, aes(x = bty_avg, y = score)) +
+  geom_point() +
+  labs(x = "Beauty Score", y = "Teaching Score",
+       title = "Relationship between teaching and beauty scores") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+The *regression line* is a visual summary of the relationship between two numerical variables, in our case the outcome variable `score` and the explanatory variable `bty_avg`. The positive slope of the blue line is consistent with our earlier observed correlation coefficient of 0.187 suggesting that there is a positive relationship between these two variables: as instructors have higher “beauty” scores, so also do they receive higher teaching evaluations. We’ll see later, however, that while the correlation coefficient and the slope of a regression line always have the same sign (positive or negative), they typically do not have the same value
+<br>
+<br>
+
+### Simple linear regression
+<br>
+<br>
+
+**The equation of the regression line is $\hat{y}= b_0 + b_1 * x$. The intercept coefficient is $b_0$, so $b_0$ is the value of $\hat{y}$ when $x = 0$. The slope coefficient for $x$ is $b_1$, i.e., the increase in $\hat{y}$ for every increase of one in $x$**
+
+**We know that the regression line has a positive slope $b_1$ corresponding to our explanatory $x$ variable `bty_avg`. Why? Because as instructors tend to have higher `bty_avg` scores, so also do they tend to have higher teaching evaluation `scores`. However, what is the numerical value of the slope $b_1$? What about the intercept $b_0$?**
+
+**We can obtain the values of the intercept $b_0$ and the slope for `bty_avg` $b_1$ by outputting a linear regression table. This is done in two steps:**
+
+1. We first “fit” the linear regression model using the `lm()` function and save it in `score_model`
+
+1. We get the regression table by applying the `get_regression_table()` function from the `moderndive` package to `score_model`
+
+```{r}
+# fit regression model by using lm(y ~ x, data = data_frame_name)
+score_model <- lm(score ~ bty_avg, data = evals_ch5)
+
+# get regression table:
+get_regression_table(score_model)
+```
+<br>
+<br>
+
+**The intercept $b_0 = 3.88$ is the average teaching score $\hat{y} = \hat{score}$ for those courses where the instructor had a “beauty” score `bty_avg` of 0. While the intercept of the regression line has a mathematical interpretation, it has no practical interpretation here, since observing a `bty_avg` of 0 is impossible**
+
+**Of greater interest is the slope `bty_avg` of 0.067 as this summarizes the relationship between the teaching and “beauty” score variables. Sign is positive, suggesting a positive relationship: teachers with higher “beauty” scores also tend to have higher teaching scores**
+
+**Recall from earlier that the correlation coefficient is 0.187. They both have the same positive sign, but have a different value. Recall further that the correlation’s interpretation is the “strength of linear association”. The slope’s interpretation is a little different:**
+
+> For every increase of 1 unit in `bty_avg`, there is an *associated* increase of, *on average*, 0.067 units of `score`
+
+**We only state that there is an associated increase and not necessarily a causal increase. Just because two variables are strongly associated, it doesn’t necessarily mean that one causes the other**
+
+**What the slope of 0.067 is saying is that across all possible courses, the average difference in teaching score between two instructors whose “beauty” scores differ by one is 0.067**
+<br>
+<br>
+
+### Observed/fitted values and residuals
+
+<br>
+<br>
+
+![](C:/Users/Den/Desktop/Learning/table5.3.jpg)
+
+<br>
+<br>
+**Look at the table below to understand the equation:**
+<br>
+<br>
+
+![](C:/Users/Den/Desktop/Learning/table5.3.1.jpg)
+
+**Now say we want to compute both the fitted value $\hat{y}= b_0 + b_1 * x$ and the residual $y - \hat{y}$ for all 463 courses. Let’s do this using a computer with the `get_regression_points()` function**
+
+```{r}
+# get results of only the 21st through 24th courses for brevity’s sake
+regression_points <- get_regression_points(score_model) %>%
+  filter(ID == 21:24)
+
+regression_points
+```
+
+1. The score column represents the observed outcome variable $y$. This is the y-position of the 463 black points
+
+1. The bty_avg column represents the values of the explanatory variable $x$. This is the x-position of the 463 black points
+
+1. The score_hat column represents the fitted values $\hat{y}$. This is the corresponding value on the regression line for the 463 $x$ values
+
+1. The residual column represents the residuals $y - \hat{y}$. This is the 463 vertical distances between the 463 black points and the regression line
+<br>
+<br>
+
+## One categorical explanatory variable
+
+<br>
+<br>
+
+**In this section, we’ll explore differences in life expectancy in two ways:**
+
+1. Differences between continents: Are there significant differences in average life expectancy between the five populated continents of the world: Africa, the Americas, Asia, Europe, and Oceania?
+
+1. Differences within continents: How does life expectancy vary within the world’s five continents? For example, is the spread of life expectancy among the countries of Africa larger than the spread of life expectancy among the countries of Asia?
+
+**We’ll use the `gapminder` data frame included in the `gapminder package`. This dataset has international development statistics such as life expectancy, GDP per capita, and population for 142 countries for 5-year intervals between 1952 and 2007. We’ll use this data for basic regression again, but now using an explanatory variable $x$ that is categorical:**
+
+1. A numerical outcome variable $y$ (a country’s life expectancy) and
+
+1. A single categorical explanatory variable $x$ (the continent that the country is a part of)
+<br>
+<br>
+
+### Exploratory data analysis
+
+<br>
+<br>
+
+let’s `filter()` for only those observations/rows corresponding to the year 2007 and `select()` these variables: country, lifeExp, continent and gdpPercap.
+
+```{r}
+# assigned the value to a variable called "gapminder2007"
+gapminder2007 <- gapminder %>% 
+  filter(year == 2007) %>% 
+  select(country, lifeExp, continent, gdpPercap)
+
+glimpse(gapminder2007)
+```
+
+```{r}
+head(gapminder2007, 10)
+```
+<br>
+<br>
+**Let’s look at a random sample of five out of the 142 countries**
+
+```{r}
+gapminder2007 %>%
+  sample_n(size = 5)
+```
+
+**Note that random sampling will likely produce a different subset of 5 rows for you than what’s shown**
+
+<br>
+<br>
+**Let’s `select()`now the outcome and explanatory variables and apply the `skim()` function to see summary statistics**
+
+```{r}
+gapminder2007 %>% 
+  select(lifeExp, continent) %>% 
+  skim()
+```
+
+**`skim()`reports summaries for categorical variables separately from the numerical variables**
+
+**We observe that the global median life expectancy in 2007 was 71.94. Thus, half of the world’s countries (71 countries) had a life expectancy less than 71.94. The mean life expectancy of 67.01 is lower, however. Why is the mean life expectancy lower than the median?**
+
+<br>
+<br>
+**Let’s visualize the distribution of our outcome variable $y =$ `lifeExp`**
+
+```{r}
+ggplot(gapminder2007, aes(x = lifeExp)) +
+  geom_histogram(binwidth = 5, color = "white") +
+  labs(x = "Life Expectancy", 
+       y = "Number of Countries",
+       title = "Histogram of distribution of worldwide life expectancies")
+```
+
+We see that this data is left-skewed, also known as negatively skewed: there are a few countries with low life expectancy that are bringing down the mean life expectancy. However, the median is less sensitive to the effects of such outliers; hence, the median is greater than the mean in this case
+
+<br>
+<br>
+**We also want to compare life expectancies both between continents and within continents. In other words, our visualizations need to incorporate some notion of the variable `continent`. We can do this easily with a faceted histogram**
+
+```{r}
+ggplot(gapminder2007, aes(x = lifeExp)) +
+  geom_histogram(binwidth = 5, color = "white") +
+  labs(x = "Life Expectancy",
+       y = "Number of Countries",
+       title = "Histogram of distribution of worldwide life expectancies") +
+  facet_wrap(~ continent, nrow = 2)
+  
+```
+<br>
+<br>
+**An alternative method to visualize the distribution of a numerical variable split by a categorical variable is by using a side-by-side boxplot. We map the categorical variable continent to the $x$-axis and different life expectancies within each continent on the $y$-axis**
+
+```{r}
+ggplot(gapminder2007, aes(x = continent, y = lifeExp)) +
+  geom_boxplot() +
+  labs(x = "Continent",
+       y = "Life Expectancy",
+       title = "Life expectancy by continent")
+```
+
+We can quickly convince ourselves that Oceania has the highest median life expectancy by drawing an imaginary horizontal line at $y$ = 80. Furthermore, as we observed in the faceted histogram, Africa and Asia have the largest variation in life expectancy as evidenced by their large interquartile ranges (the heights of the boxes)
+
+<br>
+<br>
+**Let’s compute the median and mean life expectancy for each continent by using `group_by()` and `summarize()`**
+
+```{r}
+lifeExp_by_continent <- gapminder2007 %>% 
+  group_by(continent) %>% 
+  summarize(median = median(lifeExp),
+            mean = mean(lifeExp))
+
+lifeExp_by_continent
+```
+<br>
+<br>
+**Using Africa’s mean life expectancy of 54.8 as a baseline for comparison, let’s start making comparisons**
+
+![](C:/Users/Den/Desktop/Learning/table5.3.2.jpg)
+
+<br>
+<br>
+
+### Linear regression
+
+<br>
+<br>
+
+Our model will not yield a “best-fitting” regression line but rather *offsets* relative to a baseline for comparison
+
+1. We first “fit” the linear regression model using the `lm(y ~ x, data)` function and save it in `lifeExp_model`
+
+1. We get the regression table by applying the `get_regression_table()` function from the `moderndive` package to `lifeExp_model`
+
+```{r}
+lifeExp_model <- lm(lifeExp ~ continent, data = gapminder2007) 
+get_regression_table(lifeExp_model)
+```
+<br>
+
+1. `intercept` corresponds to the mean life expectancy of countries in Africa of 54.8 years
+
+1. `continentAmericas` corresponds to countries in the Americas and the value +18.8 is the same difference in mean life expectancy relative to Africa we displayed in Table 5.7. In other words, the mean life expectancy of countries in the Americas is $54.8 + 18.8 = 73.6$. The same applies to the rest of the continents
+
+**The `estimate` column correspond to the “baseline for comparison” continent Africa (the intercept) as well as four “offsets” from this baseline for the remaining 4 continents: the Americas, Asia, Europe, and Oceania. Africa was chose as baseline for being first alphabetically**
+
+![](C:/Users/Den/Desktop/Learning/equationfit_1.jpg)
+
+![](C:/Users/Den/Desktop/Learning/equationfit_2.jpg)
+
+![](C:/Users/Den/Desktop/Learning/equationfit_3.jpg)
+<br>
+<br>
+Let’s generalize this idea a bit. If we fit a linear regression model using a categorical explanatory variable $x$ that has $k$ possible categories, the regression table will return an intercept and $k - 1$ “offsets.” In our case, since there are $k = 5$ continents, the regression model returns an intercept corresponding to the baseline for comparison group of Africa and $k - 1 = 4$ offsets corresponding to the Americas, Asia, Europe, and Oceania.
+
+<br>
+
+### Observed/fitted values and residuals
+
+<br>
+<br>
+
+1. Observe values $y$, or the observed value of the outcome variable
+
+1. Fitted values $\hat{y}$,  or the value on the regression line for a given $x$ value
+
+1. Residuals $y - \hat{y}$, or the error between the observed value and the fitted value
+
+<br>
+**Use the `get_regression_points()` function and add an argument setting `ID = "country"`: this is telling the function to use the variable `country` in `gapminder2007` as an *identification variable* in the output**
+
+```{r}
+regression_points <- get_regression_points(lifeExp_model, ID = "country")
+
+head(regression_points, 10)
+```
+
+![](C:/Users/Den/Desktop/Learning/equationfit_4.jpg)
+<br>
+<br>
+
+##  Related topics
+
+
+### Best-fitting line
+
+<br>
+**What do we mean by “best”?** 
+
+Recall that for an instructor with a beauty score of $x = 7.333$ we mark the observed value $y$ with a circle, the fitted value $\hat{y}$ with a square, and the residual $y - \hat{y}$ with an arrow. We will add three more arbitrarily chosen course instructors:
+
+![](C:/Users/Den/Desktop/Learning/fitchart.jpg)
+
+![](C:/Users/Den/Desktop/Learning/textfitvalue.jpg)
+
+![](C:/Users/Den/Desktop/Learning/formfit.jpg)
+
+```{r}
+# fit regression model
+score_model <- lm(score ~ bty_avg,
+                  data = evals_ch5)
+
+# get regression points
+regression_points <- get_regression_points(score_model)
+
+regression_points
+```
+<br>
+<br>
+
+```{r}
+# compute sum of squared residuals
+regression_points %>% 
+  mutate(squared_residuals = residual^2) %>% 
+  summarize(sum_of_squared_residuals = sum(squared_residuals))
+```
+Any other straight line drawn in the figure would yield a sum of squared residuals greater than 132.
+
+
+
+
+

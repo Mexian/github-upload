@@ -1,0 +1,6 @@
+"0","drinks_smaller <- drinks %>% "
+"0","  filter(country %in% c(""USA"", ""China"", ""Italy"", ""Saudi Arabia"")) %>% "
+"0","  select(-total_litres_of_pure_alcohol) %>% "
+"0","  rename(beer = beer_servings, spirit = spirit_servings, wine = wine_servings)"
+"0",""
+"0","drinks_smaller"

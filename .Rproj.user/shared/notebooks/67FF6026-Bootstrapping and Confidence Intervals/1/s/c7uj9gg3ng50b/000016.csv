@@ -1,0 +1,5 @@
+"0","virtual_resampled_means <- virtual_resamples %>% "
+"0","  group_by(replicate) %>% "
+"0","  summarize(mean_year = mean(year))"
+"0",""
+"0","head(virtual_resampled_means, 10)"

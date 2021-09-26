@@ -1,0 +1,4 @@
+"0","many_airports <- flights %>% "
+"0","  filter(dest %in% c(""SEA"", ""SFO"", ""PDX"", ""BTV"", ""BDL""))"
+"0",""
+"0","head(many_airports)"

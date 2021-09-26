@@ -1,0 +1,2 @@
+"0","virtual_shovel %>% "
+"0","  mutate(is_red = (color == ""red""))"

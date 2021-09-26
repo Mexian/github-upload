@@ -1,0 +1,5 @@
+"0","# assign the result to ""virtual_shovel"""
+"0","virtual_shovel <- bowl %>% "
+"0","  rep_sample_n(size = 50)"
+"0",""
+"0","virtual_shovel"

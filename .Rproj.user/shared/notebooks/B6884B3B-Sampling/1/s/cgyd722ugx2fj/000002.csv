@@ -1,0 +1,4 @@
+"0","virtual_shovel %>% "
+"0","  mutate(is_red = color == ""red"") %>% "
+"0","  summarize(num_red = sum(is_red)) %>% "
+"0","  mutate(prop_red = num_red / 50)"

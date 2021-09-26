@@ -1,0 +1,6 @@
+"0","# filter all rows that departed from JFK and were heading to Burlington, Vermont (""BTV"") or Seattle, Washington (""SEA"") and in the months of October, November, or December"
+"0","btv_sea_flights_fall <- flights %>% "
+"0","  filter(origin == ""JFK"" & (dest == ""BTV"" | dest == ""SEA"") & month >= 10)"
+"0",""
+"0","# see the first 6 rows"
+"0","head(btv_sea_flights_fall)"

@@ -1,0 +1,185 @@
+---
+title: "Data Importing and “Tidy” Data"
+author: "El Mex"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Basic functions for data tidying
+
+```{r}
+# import the libraries to be used
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(nycflights13)
+library(fivethirtyeight)
+```
+## Using `readr`
+
+```{r}
+# import the ".csv" file by using "read_csv()" function
+library(readr)
+dem_score <- read_csv("dem_score.csv")
+
+head(dem_score)
+
+```
+
+## “Tidy” data
+```{r}
+# explore the data frame "drinks" from the "fivethirtyeight" package
+glimpse(drinks)
+head(drinks)
+```
+
+**Apply these actions:**
+
+1. `filter()` the drinks data frame to only consider 4 countries: USA, China, Italy, and Saudi Arabia.
+
+1. `select()` all columns except `total_litres_of_pure_alcohol` by using the - sign
+
+1. `rename()` the variables `beer_servings`, `spirit_servings`, and `wine_servings` to `beer`, `spirit`, and `wine`, respectively. 
+
+1. Save all in a variable called `drinks_smaller`
+
+```{r}
+drinks_smaller <- drinks %>% 
+  filter(country %in% c("USA", "China", "Italy", "Saudi Arabia")) %>% 
+  select(-total_litres_of_pure_alcohol) %>% 
+  rename(beer = beer_servings, spirit = spirit_servings, wine = wine_servings)
+
+drinks_smaller
+```
+## Converting to "tidy" data
+
+**Most original data frames are in wide (non-“tidy”) format as it is above.  Use `pivot_longer()` function in the `tidyr` package to convert it to "tidy" format**
+
+**Reminder: **
+
+1. `names_to` is the name of the variable in the new “tidy”/long data frame that will contain the *column names* of the original data
+
+1. `values_to` is the name of the variable in the new “tidy” data frame that will contain the *values* of the original data
+
+1. `cols` is the columns in the data frame you either want to or don’t want to “tidy”
+
+```{r}
+# We don't want to tidy it to the "country" column so we put "-" sign to country (-country)
+drinks_smaller_tidy <- drinks_smaller %>% 
+  pivot_longer(names_to = "type",
+               values_to = "servings",
+               cols = -country)
+
+drinks_smaller_tidy
+```
+
+**As the variable names of `type` & `servings` don’t appear in `drinks_smaller`, we use quotation marks around it, on the other hand, `country` appear in `drinks_smaller` so no need for quotation marks**
+
+```{r eval=FALSE}
+# another way to get the same results
+drinks_smaller %>% 
+  pivot_longer(names_to = "type",
+               values_to = "servings",
+               cols = c(beer, spirit, wine))
+
+# since these three columns appear one after another in "drinks_smaller", we could also do this:
+drinks_smaller %>% 
+  pivot_longer(names_to = "type", 
+               values_to = "servings", 
+               cols = beer:wine)
+```
+
+**Create the side-by-side barplot:**
+
+1. The categorical variable `country` with four levels (China, Italy, Saudi Arabia, USA) would have to be mapped to the `x`-position of the bars
+
+1. The numerical variable `servings` would have to be mapped to the `y`-position of the bars (the height of the bars)
+
+1. The categorical variable `type` with three levels (beer, spirit, wine) would have to be mapped to the `fill` color of the bars
+
+```{r}
+ggplot(drinks_smaller_tidy, aes(x = country, y = servings, fill = type)) +
+  geom_col(position = "dodge")
+```
+**Let's do another exercise using the `airline_safety` data frame in the `fivethirtyeight` package**
+
+```{r}
+# explore it
+glimpse(airline_safety)
+```
+
+```{r}
+airline_safety_smaller <- airline_safety %>% 
+  select(airline, starts_with("fatalities"))
+
+airline_safety_smaller
+```
+**How would you convert this data frame to be in “tidy” format, in particular so that it has a variable `fatalities_years` indicating the incident year and a variable `count` of the fatality counts?**
+
+```{r}
+airline_tidy <- airline_safety_smaller %>% 
+  pivot_longer(names_to = "fatalities_years",
+               values_to = "count",
+               cols = -airline)
+
+airline_tidy
+```
+
+## Case study: Democracy in Guatemala
+
+**Let’s use the `dem_score` data frame we imported, but focus on only data corresponding to Guatemala**
+
+```{r}
+guat_dem <- dem_score %>% 
+  filter(country == "Guatemala")
+
+guat_dem
+  
+```
+
+
+**Our data isn't tidy. Create a data frame with three columns: `country`, `year`, and `democracy_score`**
+
+
+```{r}
+ guat_dem_tidy <- guat_dem %>% 
+  pivot_longer(names_to = "year",
+               values_to = "democracy_score",
+               cols = -country,
+               names_transform = list(year = as.integer))
+
+guat_dem_tidy
+```
+
+**The original column names ('1952', '1957'...) were made of a list of characters, so we had to convert the new variable `year` as integers**
+
+**Create a time-series plot**
+
+```{r}
+ggplot(guat_dem_tidy, aes(x = year, y = democracy_score)) +
+  geom_line() +
+  labs(x = "Year", y = "Democracy Score")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

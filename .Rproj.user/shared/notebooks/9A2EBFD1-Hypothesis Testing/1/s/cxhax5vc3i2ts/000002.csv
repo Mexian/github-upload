@@ -1,0 +1,3 @@
+"0","# visualize it"
+"0","visualize(bootstrap_distribution) +"
+"0","  shade_confidence_interval(endpoints = se_ci)"

@@ -1,0 +1,2 @@
+"0","lifeExp_model <- lm(lifeExp ~ continent, data = gapminder2007) "
+"0","get_regression_table(lifeExp_model)"

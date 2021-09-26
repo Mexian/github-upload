@@ -1,0 +1,7 @@
+"0","summary_monthly_temp <- weather %>% "
+"0","  group_by(month) %>% "
+"0","  summarize(mean_temp_in_F = mean(temp, na.rm = TRUE), "
+"0","            mean_temp_in_C = mean(temp_in_C, na.rm = TRUE))"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","summary_monthly_temp"

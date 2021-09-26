@@ -1,0 +1,7 @@
+"0","# flights from New York City to Portland, Oregon (destination code: `""PDX""`)"
+"0","portland_flights <- flights %>% "
+"0","  filter(dest == ""PDX"")"
+"0",""
+"0",""
+"0","# see the first 6 rows"
+"0","head(portland_flights)"

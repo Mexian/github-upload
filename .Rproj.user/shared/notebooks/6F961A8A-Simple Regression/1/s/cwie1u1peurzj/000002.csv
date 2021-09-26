@@ -1,0 +1,4 @@
+"0","# put the name of the outcome variable on the left-hand side of the ~ “tilde” sign, "
+"0","# while putting the name of the explanatory variable on the right-hand side"
+"0","evals_ch5 %>% "
+"0","  get_correlation(formula = score ~ bty_avg)"

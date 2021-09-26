@@ -1,0 +1,6 @@
+"0","# We need to define which event is of interest! red or white in the success argument."
+"0","bowl_sample_1 %>% "
+"0","  specify(response = color, success = ""red"")"
+"1","Response: color (factor)"
+"1","
+"

@@ -1,0 +1,5 @@
+"0","# fit regression model by using lm(y ~ x, data = data_frame_name)"
+"0","score_model <- lm(score ~ bty_avg, data = evals_ch5)"
+"0",""
+"0","# get regression table:"
+"0","get_regression_table(score_model)"

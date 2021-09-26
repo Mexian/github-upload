@@ -1,0 +1,2 @@
+"0","bowl %>% "
+"0","  summarize(p_red = mean(color == ""red""))"

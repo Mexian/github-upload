@@ -1,0 +1,6 @@
+"0",""
+"0","ggplot(credit_ch6, aes(x = income, y = debt)) +"
+"0","  geom_point() +"
+"0","  labs(x = ""Income (in $1000)"", y = ""Credit card debt (in $)"", "
+"0","       title = ""Debt and income"") +"
+"0","  geom_smooth(method = ""lm"", se = FALSE)"

@@ -1,0 +1,3 @@
+"0","regression_points <- get_regression_points(lifeExp_model, ID = ""country"")"
+"0",""
+"0","head(regression_points, 10)"

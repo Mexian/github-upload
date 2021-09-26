@@ -1,0 +1,5 @@
+"0","# filtering rows to flights that didn’t go to Burlington, ""BTV"" or Seattle, ""SEA"""
+"0","not_BTV_SEA <- flights %>% "
+"0","  filter(!(dest == ""BTV"" | dest == ""SEA""))"
+"0",""
+"0","head(not_BTV_SEA)"

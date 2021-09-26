@@ -1,0 +1,10 @@
+"0","named_dests <- flights %>% "
+"0","  group_by(dest) %>% "
+"0","  summarize(num_flights = n()) %>% "
+"0","  arrange(desc(num_flights)) %>% "
+"0","  inner_join(airports, by = c(""dest"" = ""faa"")) %>% "
+"0","  rename(airport_name = name)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","#explore it"
+"0","head(named_dests)"

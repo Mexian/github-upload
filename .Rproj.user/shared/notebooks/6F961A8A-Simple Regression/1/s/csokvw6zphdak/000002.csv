@@ -1,0 +1,3 @@
+"0","evals_ch5 %>% "
+"0","  summarize(mean_bty_avg = mean(bty_avg), mean_score = mean(score),"
+"0","            median_bty_avg = median(bty_avg), median_score = median(score))"

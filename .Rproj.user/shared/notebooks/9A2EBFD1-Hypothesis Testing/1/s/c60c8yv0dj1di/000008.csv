@@ -1,0 +1,6 @@
+"0","# Let’s save this in obs_diff_prop:"
+"0","obs_diff_prop <- promotions %>% "
+"0","  specify(decision ~ gender, success = ""promoted"") %>% "
+"0","  calculate(stat = ""diff in props"", order = c(""male"", ""female"")) "
+"0","  "
+"0","  head(obs_diff_prop, 10)"

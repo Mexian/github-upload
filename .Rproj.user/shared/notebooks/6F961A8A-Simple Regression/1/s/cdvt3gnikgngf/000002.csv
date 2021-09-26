@@ -1,0 +1,4 @@
+"0","# compute sum of squared residuals"
+"0","regression_points %>% "
+"0","  mutate(squared_residuals = residual^2) %>% "
+"0","  summarize(sum_of_squared_residuals = sum(squared_residuals))"

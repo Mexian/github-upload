@@ -1,0 +1,3 @@
+"0","bowl %>% "
+"0","  summarize(sum_red = sum(color == ""red""),"
+"0","            sum_not_red = sum(color != ""red""))"

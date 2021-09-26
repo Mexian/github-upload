@@ -1,0 +1,6 @@
+"0","airline_tidy <- airline_safety_smaller %>% "
+"0","  pivot_longer(names_to = ""fatalities_years"","
+"0","               values_to = ""count"","
+"0","               cols = -airline)"
+"0",""
+"0","airline_tidy"

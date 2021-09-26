@@ -1,0 +1,7 @@
+"0"," guat_dem_tidy <- guat_dem %>% "
+"0","  pivot_longer(names_to = ""year"","
+"0","               values_to = ""democracy_score"","
+"0","               cols = -country,"
+"0","               names_transform = list(year = as.integer))"
+"0",""
+"0","guat_dem_tidy"

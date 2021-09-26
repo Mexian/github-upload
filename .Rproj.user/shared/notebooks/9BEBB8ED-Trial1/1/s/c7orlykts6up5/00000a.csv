@@ -1,0 +1,7 @@
+"0","summary_monthly_temp <- weather %>% "
+"0","  group_by(month) %>% "
+"0","  summarize(mean = mean(temp, na.rm = TRUE),"
+"0","            std_dev = sd(temp, na.rm = TRUE))"
+"0",""
+"0","#check it out"
+"0","summary_monthly_temp"

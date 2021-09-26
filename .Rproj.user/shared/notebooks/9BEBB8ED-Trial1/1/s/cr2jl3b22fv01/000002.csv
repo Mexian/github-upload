@@ -1,0 +1,7 @@
+"0","freq_dest <- flights %>% "
+"0","  group_by(dest) %>% "
+"0","  summarize(num_flights = n())"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","#check it out"
+"0","head(freq_dest)"

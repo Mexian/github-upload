@@ -1,0 +1,4 @@
+"0","just_two <- flights %>% "
+"0","  select(carrier, flight)"
+"0",""
+"0","head(just_two)"

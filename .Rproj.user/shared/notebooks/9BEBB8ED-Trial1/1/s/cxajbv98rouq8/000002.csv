@@ -1,0 +1,4 @@
+"0","delay_var <- flights %>% "
+"0"," select(ends_with(""delay"")) "
+"0",""
+"0","head(delay_var)"

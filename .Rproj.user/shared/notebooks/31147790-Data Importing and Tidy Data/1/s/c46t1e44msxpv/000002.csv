@@ -1,0 +1,19 @@
+"0","# explore the data frame ""drinks"" from the ""fivethirtyeight"" package"
+"0","glimpse(drinks)"
+"1","Rows: 193"
+"1",""
+"1","
+"
+"1","Columns: 5"
+"1",""
+"1","
+"
+"1","$ country                      [3m[90m<chr>[39m[23m ""Afghanistan"", ""Albania"", ""Algeria"", ""Andorra"", ""An...
+$ beer_servings                [3m[90m<int>[39m[23m 0, 89, 25, 245, 217, 102, 193, 21, 261, 279, 21, 12...
+$ spirit_servings              [3m[90m<int>[39m[23m 0, 132, 0, 138, 57, 128, 25, 179, 72, 75, 46, 176, ...
+$ wine_servings                [3m[90m<int>[39m[23m 0, 54, 14, 312, 45, 45, 221, 11, 212, 191, 5, 51, 7...
+$ total_litres_of_pure_alcohol [3m[90m<dbl>[39m[23m 0.0, 4.9, 0.7, 12.4, 5.9, 4.9, 8.3, 3.8, 10.4, 9.7,..."
+"1",""
+"1","
+"
+"0","head(drinks)"

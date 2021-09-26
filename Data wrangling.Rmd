@@ -1,0 +1,391 @@
+---
+title: "Data wrangling"
+author: "El Mex"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+# output: html_document
+# output: ioslides_presentation
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Basic functions from `dplyr`.
+
+**Needed packages**
+
+```{r main packages, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(nycflights13)
+```
+
+```{r}
+# explore the dataframe called `flights`
+glimpse(flights)
+```
+
+
+## `filter` rows
+
+```{r filter 1}
+# flights from New York City to Portland, Oregon (destination code: "PDX")
+portland_flights <- flights %>% 
+  filter(dest == "PDX")
+
+
+# see the first 6 rows
+head(portland_flights)
+```
+**Let's begin with an exercise**
+```{r filter 2}
+# filter all rows from JFK that were heading to Burlington ("BTV") or Seattle ("SEA") & 
+# in the months of October, November, or December.
+btv_sea_flights_fall <- flights %>% 
+  filter(origin == "JFK" & (dest == "BTV" | dest == "SEA") & month >= 10)
+
+# see the first 6 rows
+head(btv_sea_flights_fall)
+```
+**We could use a comma instead of "&" to get the same results**
+```{r filter 3, eval=FALSE}
+btv_sea_flights_fall <- flights %>% 
+  filter(origin == "JFK", (dest == "BTV" | dest == "SEA"), month >= 10)
+```
+
+**Using `!` "not" operator to pick rows that don’t match a criteria**
+```{r filter 4}
+# filtering rows to flights that didn’t go to Burlington, "BTV" or Seattle, "SEA"
+not_BTV_SEA <- flights %>% 
+  filter(!(dest == "BTV" | dest == "SEA"))
+
+head(not_BTV_SEA)
+```
+**Warning: note the parentheses around the (dest == "BTV" | dest == "SEA"). Let's say we put it this way:**
+
+`flights %>% filter(!dest == "BTV" | dest == "SEA")`
+
+**This would give us all flights not headed to "BTV" or those headed to "SEA", clearly a different result.**
+
+**Now say we have a larger number of airports we want to filter for, say "SEA", "SFO", "PDX", "BTV", and "BDL". Using the `|` (or) operator isn't quite practical**
+```{r filter 5, eval=FALSE}
+many_airports <- flights %>% 
+  filter(dest == "SEA" | dest == "SFO" | dest == "PDX" | 
+         dest == "BTV" | dest == "BDL")
+```
+
+**A better idea is to use the `%in%` operator**
+```{r %in% operatior}
+many_airports <- flights %>% 
+  filter(dest %in% c("SEA", "SFO", "PDX", "BTV", "BDL"))
+
+head(many_airports)
+```
+## `summarize` variables
+
+**Calculate summary stats of the `temp` variable in the `weather` data frame**
+
+```{r summarize 6}
+# create variable `summary_temp` & get both, mean and standard deviation of `temp`
+summary_temp <- weather %>% 
+  summarize(mean = mean(temp), std_dev = sd(temp))
+
+# check it out
+head(summary_temp)
+```
+
+**Why did we get both `NA` as result? it's because we have some `NA` (missing values) on the the dataset. Let's use `na.rm = TRUE` to ignore any `NA`**
+
+```{r summarize 7}
+summary_temp <- weather %>% 
+  summarize(mean = mean(temp, na.rm = TRUE),
+          std_dev = sd(temp, na.rm = TRUE))
+
+# check it out
+head(summary_temp)
+```
+## `group_by` rows
+
+**Instead of a single mean temperature for the whole year, you would like one for each of the 12 months separately**
+
+```{r group_by 8, message=FALSE}
+summary_monthly_temp <- weather %>% 
+  group_by(month) %>% 
+  summarize(mean = mean(temp, na.rm = TRUE),
+            std_dev = sd(temp, na.rm = TRUE))
+
+#check it out
+summary_monthly_temp
+```
+
+**Let's use the `n()` counting summary function (it counts rows). Suppose we’d like to count how many flights departed each of the three airports in New York City**
+
+```{r group_by 9, message=FALSE}
+by_origin <- flights %>% 
+  group_by(origin) %>% 
+  summarize(count = n())
+
+#check it out
+by_origin
+```
+
+**Say you want to know the number of flights leaving each of the three New York City airports for each month (grouping by more than one variable)**
+
+```{r group_by 10, message=FALSE}
+by_origin_monthly <- flights %>% 
+  group_by(origin, month) %>% 
+  summarize(count = n())
+
+# check it out
+head(by_origin_monthly)
+```
+
+**When grouping by more than two variables, remember to include all variables at the same time in the same `group_by()`. Otherwise, look at this:**
+
+```{r group_by 11 wrong, message=FALSE}
+by_origin_monthly_incorrect <- flights %>% 
+  group_by(origin) %>% 
+  group_by(month) %>% 
+  summarize(count = n())
+
+# check it out
+by_origin_monthly_incorrect
+```
+
+**Here `group_by(month)` overwrote the grouping structure meta-data of the earlier `group_by(origin)`**
+
+## `mutate` existing variables
+
+**Convert temperatures from °F to °C with the formula: temp in F - 32 / 1.8**
+
+```{r mutate 12}
+# use `temp` variable for calculations
+weather <- weather %>% 
+  mutate(temp_in_C = (temp - 32) / 1.8)
+
+# check it out
+head(weather)
+```
+
+**Let’s now compute monthly average temperatures in both °F and °C using the `group_by()` and `summarize()`**
+```{r group_by & summarize 13, message=FALSE}
+summary_monthly_temp <- weather %>% 
+  group_by(month) %>% 
+  summarize(mean_temp_in_F = mean(temp, na.rm = TRUE), 
+            mean_temp_in_C = mean(temp_in_C, na.rm = TRUE))
+
+# check it out
+summary_monthly_temp
+```
+
+**Passengers are frustrated when their flight departs late, but aren’t as annoyed if pilots can make up some time during the flight. This is known in the airline industry as gain. Let's create the variable "gain"**
+
+```{r mutate 14}
+flights <- flights %>% 
+  mutate(gain = dep_delay - arr_delay)
+
+# check it out
+head(flights)
+```
+**The flight in the first row departed 2 minutes late but arrived 11 minutes late, so its “gained time in the air” is a loss of 9 minutes, hence its gain is 2 - 11 = -9. On the other hand, the flight in the fourth row departed a minute early (dep_delay of -1) but arrived 18 minutes early (arr_delay of -18), so its “gained time in the air” is 17 minutes, hence its gain is +17**
+
+**Let's look at some summary stats of `gain`**
+```{r mutate 15}
+gain_summary <- flights %>% 
+  summarize(
+    min = min(gain, na.rm = TRUE),
+    q1 = quantile(gain, 0.25, na.rm = TRUE),
+    median = quantile(gain, 0.5, na.rm = TRUE),
+    q3 = quantile(gain, 0.75, na.rm = TRUE),
+    max = max(gain, na.rm = TRUE),
+    mean = mean(gain, na.rm = TRUE),
+    sd = sd(gain, na.rm = TRUE),
+    missing = sum(is.na(gain))
+  )
+
+gain_summary
+```
+**This code was a bit long to type, we'll see a succint way to do it by using `skim()` from `skimr` package later on**
+
+**We can visualize `gain` as it is a numerical variable. Let's make an histogram**
+
+```{r hist 16}
+ggplot(data = flights, mapping = aes(x = gain)) +
+  geom_histogram(color = "white", bins = 20)
+```
+
+**Finally, we can create multiple new variables at once in the same `mutate()` code**
+
+```{r mutate 17 final}
+flights <- flights %>% 
+  mutate(
+    gain = dep_delay - arr_delay,
+    hours = air_time / 60,
+    gain_per_hour = gain / hours
+  )
+
+head(flights)
+```
+## `arrange` and sort rows
+
+**Suppose we are interested in determining the most frequent destination airports for all domestic flights departing from New York City in 2013**
+
+```{r arrange 18}
+freq_dest <- flights %>% 
+  group_by(dest) %>% 
+  summarize(num_flights = n())
+
+#check it out
+head(freq_dest)
+```
+**Observe that by default the rows are sorted in alphabetical order. Say instead we would like to see it sorted from the most to the least number of flights (`num_flights`) instead**
+
+```{r arrange 19}
+freq_dest_default <- freq_dest %>% 
+  arrange(num_flights)
+
+# check it out
+head(freq_dest_default, 10)
+```
+
+**As we see, "ascending" order is default. To switch the ordering to be in “descending” order, we use the `desc()`**
+
+```{r arrange 20}
+freq_dest_desc <- freq_dest %>% 
+  arrange(desc(num_flights))
+
+head(freq_dest_desc, 10)
+```
+
+## `join` data frames
+
+**In both the flights and airlines data frames, the key variable we want to join/merge/match the rows by has the same name: carrier. Let’s use the inner_join() function to join the two data frames**
+
+```{r join 21}
+flights_joined <- flights %>% 
+  inner_join(airlines, by = "carrier")
+
+# check both data frames
+glimpse(flights)
+glimpse(flights_joined)
+```
+
+```{r join 22}
+head(flights_joined, 10)
+```
+
+**In airports the airport code is in "faa", whereas in flights the airport codes are in "origin" and "dest". In order to join these two data frames by airport code, our `inner_join()` operation will use the `by = c("dest" = "faa")`**
+
+```{r join 23}
+flights_with_airport_names <- flights %>% 
+  inner_join(airports, by = c("dest" = "faa"))
+
+# explore it 
+glimpse(flights_with_airport_names)
+head(flights_with_airport_names)
+```
+
+**Let’s construct the chain of pipe operators %>% that computes the number of flights from NYC to each destination, but also includes information about each destination airport**
+```{r join 24}
+named_dests <- flights %>% 
+  group_by(dest) %>% 
+  summarize(num_flights = n()) %>% 
+  arrange(desc(num_flights)) %>% 
+  inner_join(airports, by = c("dest" = "faa")) %>% 
+  rename(airport_name = name)
+
+#explore it
+head(named_dests)
+```
+**Say instead we want to join two data frames by multiple key variables. For example, we see that in order to join the `flights` and `weather` data frames, we need more than one key variable: `year`, `month`, `day`, `hour`, and `origin`. This is because the combination of these 5 variables act to uniquely identify each observational unit in the weather data frame: hourly weather recordings at each of the 3 NYC airports**
+
+```{r join 25}
+flights_weather_joined <-  flights %>% 
+  inner_join(weather, by = c("year", "month", "day", "hour", "origin"))
+
+# explore it
+glimpse(flights_weather_joined)
+head(flights_weather_joined)
+```
+
+## `select` variables/columns
+
+**`flights` data frame has 19 variables. Say you only need two of these 19 variables, say `carrier` and `flight`**
+
+```{r join 26}
+just_two <- flights %>% 
+  select(carrier, flight)
+
+head(just_two)
+```
+**Let’s say instead you want to drop, or de-select, certain variables. For example, consider the variable `year` in the `flights` data frame. This variable isn’t quite a “variable” because it is always 2013 and hence doesn’t change. Remove this variable from the data frame by using the "-" sign**
+
+```{r select 27}
+flights_no_year <- flights %>% 
+  select(-year)
+
+head(flights_no_year)
+```
+**Another way of selecting columns/variables is by specifying a range of columns**
+```{r select 28}
+flight_arr_times <- flights %>% 
+  select(month:day, arr_time:sched_arr_time)
+
+head(flight_arr_times)
+```
+**The `select()` function can also be used to reorder columns when used with the `everything()` helper function. Suppose we want the `hour`, `minute`, and `time_hour` variables to appear immediately after the `year`, `month`, and `day` variables, while not discarding the rest of the variables**
+
+```{r selec 29}
+flights_reorder <- flights %>% 
+  select(year, month, day, hour, minute, time_hour, everything())
+
+glimpse(flights_reorder)
+```
+**Lastly, the helper functions `starts_with()`, `ends_with()`, and `contains()` can be used to select variables/columns that match those conditions**
+
+```{r select 30}
+a_var <- flights %>% 
+  select(starts_with("a"))
+
+head(a_var)
+```
+```{r select 31}
+delay_var <- flights %>% 
+ select(ends_with("delay")) 
+
+head(delay_var)
+```
+```{r select 32}
+time_var <- flights %>%
+  select(contains("time"))
+
+head(time_var)
+```
+## `rename` variables
+
+**`rename` changes the name of variables. In `flights`, change `dep_time` and `arr_time` to be `departure_time` and `arrival_time`**
+
+```{r rename 32}
+flights_time_new <- flights %>% 
+  select(dep_time, arr_time) %>% 
+  rename(departure_time = dep_time, arrival_time = arr_time)
+
+glimpse(flights_time_new)
+```
+
+## `top_n` values of a variable
+**return a data frame of the top 10 destination airports**
+```{r top 33}
+top_10 <- named_dests %>% 
+  top_n(n = 10, wt = num_flights)
+
+top_10
+```
+
+
+
+
+

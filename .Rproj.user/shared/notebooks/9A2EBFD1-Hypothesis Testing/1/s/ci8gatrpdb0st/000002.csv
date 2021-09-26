@@ -1,0 +1,5 @@
+"0","se_ci <- bootstrap_distribution %>% "
+"0","  get_confidence_interval(level = 0.95, type = ""se"","
+"0","                          point_estimate = obs_diff_prop)"
+"0",""
+"0","se_ci"

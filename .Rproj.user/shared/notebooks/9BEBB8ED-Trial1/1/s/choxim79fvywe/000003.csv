@@ -1,0 +1,4 @@
+"0","freq_dest_desc <- freq_dest %>% "
+"0","  arrange(desc(num_flights))"
+"0",""
+"0","head(freq_dest_desc, 10)"

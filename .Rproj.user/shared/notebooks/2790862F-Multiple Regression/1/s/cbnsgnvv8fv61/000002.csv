@@ -1,0 +1,5 @@
+"0","# fit regression model:"
+"0","debt_model <- lm(debt ~ credit_limit + income, data = credit_ch6)"
+"0",""
+"0","# get regression table:"
+"0","get_regression_table(debt_model)"

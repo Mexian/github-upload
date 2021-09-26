@@ -1,0 +1,7 @@
+"0","# We don't want to tidy it to the ""country"" column so we put ""-"" sign to country (-country)"
+"0","drinks_smaller_tidy <- drinks_smaller %>% "
+"0","  pivot_longer(names_to = ""type"","
+"0","               values_to = ""servings"","
+"0","               cols = -country)"
+"0",""
+"0","drinks_smaller_tidy"

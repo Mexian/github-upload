@@ -1,0 +1,2 @@
+"0","ggplot(drinks_smaller_tidy, aes(x = country, y = servings, fill = type)) +"
+"0","  geom_col(position = ""dodge"")"

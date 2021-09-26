@@ -1,0 +1,21 @@
+"0","# assigned the value to a variable called ""gapminder2007"""
+"0","gapminder2007 <- gapminder %>% "
+"0","  filter(year == 2007) %>% "
+"0","  select(country, lifeExp, continent, gdpPercap)"
+"0",""
+"0","glimpse(gapminder2007)"
+"1","Rows: 142"
+"1",""
+"1","
+"
+"1","Columns: 4"
+"1",""
+"1","
+"
+"1","$ country   <fct> ""Afghanistan"", ""Albania"", ""Algeria"", ""Angola"", ""Argentina"", ""Australia"", ""Austr...
+$ lifeExp   <dbl> 43.828, 76.423, 72.301, 42.731, 75.320, 81.235, 79.829, 75.635, 64.062, 79.441,...
+$ continent <fct> Asia, Europe, Africa, Africa, Americas, Oceania, Europe, Asia, Asia, Europe, Af...
+$ gdpPercap <dbl> 974.5803, 5937.0295, 6223.3675, 4797.2313, 12779.3796, 34435.3674, 36126.4927, ..."
+"1",""
+"1","
+"

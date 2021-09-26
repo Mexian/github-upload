@@ -1,0 +1,5 @@
+"0","resampled_means <- pennies_resamples %>% "
+"0","  group_by(name) %>% "
+"0","  summarize(mean_year = mean(year))"
+"0",""
+"0","head(resampled_means, 10)"

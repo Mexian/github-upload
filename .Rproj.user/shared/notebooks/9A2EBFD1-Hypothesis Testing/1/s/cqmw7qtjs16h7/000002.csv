@@ -1,0 +1,15 @@
+"0","glimpse(promotions_shuffled)"
+"1","Rows: 48"
+"1",""
+"1","
+"
+"1","Columns: 3"
+"1",""
+"1","
+"
+"1","$ id       [3m[90m<int>[39m[23m 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,...
+$ decision [3m[90m<fct>[39m[23m promoted, promoted, promoted, promoted, promoted, ...
+$ gender   [3m[90m<fct>[39m[23m female, female, male, female, male, male, male, fe..."
+"1",""
+"1","
+"

@@ -1,0 +1,4 @@
+"0","# Use of the tally() function here which is a shortcut for summarize(n = n()) to get counts"
+"0","promotions %>% "
+"0","  group_by(gender, decision) %>% "
+"0","  tally()"

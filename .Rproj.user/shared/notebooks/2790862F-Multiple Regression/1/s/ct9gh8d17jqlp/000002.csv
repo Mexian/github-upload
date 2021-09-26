@@ -1,0 +1,5 @@
+"0","# fit regression model:"
+"0","score_model_parallel_slopes <- lm(score ~ age + gender, data = evals_ch6)"
+"0",""
+"0","# get regression table:"
+"0","get_regression_table(score_model_parallel_slopes)"

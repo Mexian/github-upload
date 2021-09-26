@@ -1,0 +1,4 @@
+"0","a_var <- flights %>% "
+"0","  select(starts_with(""a""))"
+"0",""
+"0","head(a_var)"

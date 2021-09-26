@@ -1,0 +1,6 @@
+"0","lifeExp_by_continent <- gapminder2007 %>% "
+"0","  group_by(continent) %>% "
+"0","  summarize(median = median(lifeExp),"
+"0","            mean = mean(lifeExp))"
+"0",""
+"0","lifeExp_by_continent"

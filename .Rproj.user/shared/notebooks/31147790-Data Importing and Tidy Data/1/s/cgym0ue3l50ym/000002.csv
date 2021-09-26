@@ -1,0 +1,4 @@
+"0","airline_safety_smaller <- airline_safety %>% "
+"0","  select(airline, starts_with(""fatalities""))"
+"0",""
+"0","airline_safety_smaller"

@@ -1,0 +1,4 @@
+"0","time_var <- flights %>%"
+"0","  select(contains(""time""))"
+"0",""
+"0","head(time_var)"

@@ -1,0 +1,7 @@
+"0","null_distribution <- promotions %>% "
+"0","  specify(formula = decision ~ gender, success = ""promoted"") %>% "
+"0","  hypothesize(null = ""independence"") %>% "
+"0","  generate(reps = 1000, type = ""permute"") %>% "
+"0","  calculate(stat = ""diff in props"", order = c(""male"", ""female""))"
+"0",""
+"0","head(null_distribution, 10)"

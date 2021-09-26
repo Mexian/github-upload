@@ -1,0 +1,6 @@
+"0","by_origin <- flights %>% "
+"0","  group_by(origin) %>% "
+"0","  summarize(count = n())"
+"0",""
+"0","#check it out"
+"0","by_origin"

@@ -1,0 +1,17 @@
+---
+title: "Inference for Regression"
+author: "El Mex"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(infer)
+```
+
+#  

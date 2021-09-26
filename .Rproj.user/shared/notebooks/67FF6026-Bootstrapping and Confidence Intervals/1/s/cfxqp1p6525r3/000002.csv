@@ -1,0 +1,3 @@
+"0","pennies_sample %>% "
+"0","  specify(response = year) %>% "
+"0","  calculate(stat = ""mean"")"

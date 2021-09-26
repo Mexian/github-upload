@@ -1,0 +1,4 @@
+"0","flights_no_year <- flights %>% "
+"0","  select(-year)"
+"0",""
+"0","head(flights_no_year)"

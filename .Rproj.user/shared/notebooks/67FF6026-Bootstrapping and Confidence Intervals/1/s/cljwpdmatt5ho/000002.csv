@@ -1,0 +1,4 @@
+"0","standard_error_ci <- bootstrap_distribution %>% "
+"0","  get_confidence_interval(type = ""se"", point_estimate = x_bar)"
+"0",""
+"0","standard_error_ci"

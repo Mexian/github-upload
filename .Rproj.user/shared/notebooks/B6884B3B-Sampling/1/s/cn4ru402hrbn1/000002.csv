@@ -1,0 +1,6 @@
+"0","virtual_prop_red <- virtual_samples %>% "
+"0","  group_by(replicate) %>% "
+"0","  summarize(red = sum(color == ""red"")) %>% "
+"0","  mutate(prop_red = red / 50)"
+"0",""
+"0","head(virtual_prop_red, 10)"

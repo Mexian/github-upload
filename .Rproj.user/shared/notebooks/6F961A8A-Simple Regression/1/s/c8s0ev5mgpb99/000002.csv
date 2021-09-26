@@ -1,0 +1,5 @@
+"0","ggplot(gapminder2007, aes(x = continent, y = lifeExp)) +"
+"0","  geom_boxplot() +"
+"0","  labs(x = ""Continent"","
+"0","       y = ""Life Expectancy"","
+"0","       title = ""Life expectancy by continent"")"

@@ -1,0 +1,3 @@
+"0","promotions_shuffled %>% "
+"0","  group_by(gender, decision) %>% "
+"0","  tally() # Same as summarize(n = n())"

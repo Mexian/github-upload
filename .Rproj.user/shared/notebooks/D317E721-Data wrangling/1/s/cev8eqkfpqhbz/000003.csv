@@ -1,0 +1,6 @@
+"0","# create variable ""summary_temp & get both, mean and standard deviation of `temp`"""
+"0","summary_temp <- weather %>% "
+"0","  summarize(mean = mean(temp), std_dev = sd(temp))"
+"0",""
+"0","# check it out"
+"0","head(summary_temp)"

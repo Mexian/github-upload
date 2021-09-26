@@ -1,0 +1,4 @@
+"0","ggplot(evals_ch5, aes(x = bty_avg, y = score)) +"
+"0","  geom_jitter() +"
+"0","  labs(x = ""Beauty Score"", y = ""Teaching Score"","
+"0","       title = ""Scatterplot of relationship of teaching and beauty scores"")"

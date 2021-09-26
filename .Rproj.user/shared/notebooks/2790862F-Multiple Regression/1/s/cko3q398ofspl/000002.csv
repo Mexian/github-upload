@@ -1,0 +1,3 @@
+"0","regression_points_parallel <- get_regression_points(score_model_parallel_slopes)"
+"0",""
+"0","head(regression_points_parallel, 10)"

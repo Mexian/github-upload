@@ -1,0 +1,8 @@
+"0","# fit regression model"
+"0","score_model <- lm(score ~ bty_avg,"
+"0","                  data = evals_ch5)"
+"0",""
+"0","# get regression points"
+"0","regression_points <- get_regression_points(score_model)"
+"0",""
+"0","regression_points"

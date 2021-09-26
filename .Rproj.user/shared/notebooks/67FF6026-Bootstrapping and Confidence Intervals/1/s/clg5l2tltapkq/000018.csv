@@ -1,0 +1,4 @@
+"0",""
+"0","ggplot(pennies_sample, aes(x = year)) +"
+"0","  geom_histogram(binwidth = 10, color = ""white"") +"
+"0","  labs(title = ""Original sample of 50 pennies"")"

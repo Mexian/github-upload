@@ -1,0 +1,4 @@
+"0","ggplot(evals_ch6, aes(x = age, y = score, color = gender)) +"
+"0","  geom_point() +"
+"0","  labs(x = ""Age"", y = ""Teaching Scores"", color = ""Gender"") +"
+"0","  geom_parallel_slopes(se = FALSE)"

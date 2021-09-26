@@ -1,0 +1,658 @@
+---
+title: "Bootstrapping and Confidence Intervals"
+author: "El Mex"
+output: 
+ pdf_document:
+   latex_engine: xelatex
+   toc: true
+   number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(infer)
+```
+
+# Bootstrapping and Confidence Intervals
+
+## Pennies activity
+
+### What is the average year on US pennies in 2019?
+
+<br>
+**Try to imagine all the pennies being used in the United States in 2019. That’s a lot of pennies! Now say we’re interested in the average year of minting of all these pennies. Instead of collecting all the pennies in the USA (near impossible), let’s collect a sample of 50 pennies from a local bank.**
+
+**The `moderndive` package contains this data on our 50 sampled pennies in the `pennies_sample` data frame:**
+
+```{r}
+# check it out
+glimpse(pennies_sample)
+
+head(pennies_sample, 10)
+```
+
+<br>
+
+**The first variable `ID` corresponds to the ID labels, whereas the second variable `year` corresponds to the year of minting saved as a numeric variable, also known as a double (`dbl`).**
+
+**Let’s first visualize the distribution of the year of these 50 pennies. Since `year` is a numerical variable, we use a histogram.**
+
+```{r}
+ggplot(pennies_sample, aes(x = year)) +
+  geom_histogram(binwidth = 10, color = "white")
+```
+
+<br>
+
+**Observe a slightly left-skewed distribution, since most pennies fall between 1980 and 2010 with only a few pennies older than 1970. What is the average year for the 50 sampled pennies? Eyeballing the histogram it appears to be around 1990. Let’s now compute this value exactly.**
+
+```{r}
+# use summarize() to get the mean
+x_bar <- pennies_sample %>% 
+  summarize(mean_year = mean(year))
+
+x_bar
+```
+<br>
+
+**If we’re willing to assume that pennies_sample is a representative sample from all US pennies, a “good guess” of the average year of minting of all US pennies would be 1995.44. This quantity is an estimate of the population mean year of all US pennies  *μ*. Such estimates are prone to sampling variation and to study that we need too many samples. Say we’re feeling lazy, however, and don’t want to go back to the bank for another sample of pennies. How can we study the effects of sampling variation using our single sample?**
+
+<br>
+
+### Resampling once
+
+<br>
+
+**First, let’s load the data into R by manually creating a data frame `pennies_resample` of our 50 resampled values. We’ll do this using the `tibble()` command from the `dplyr` package. Note that the 50 values you resample will almost certainly not be the same as ours given the inherent randomness.**
+
+```{r}
+pennies_resample <- tibble(
+  year = c(1976, 1962, 1976, 1983, 2017, 2015, 2015, 1962, 2016, 1976, 
+           2006, 1997, 1988, 2015, 2015, 1988, 2016, 1978, 1979, 1997, 
+           1974, 2013, 1978, 2015, 2008, 1982, 1986, 1979, 1981, 2004, 
+           2000, 1995, 1999, 2006, 1979, 2015, 1979, 1998, 1981, 2015, 
+           2000, 1999, 1988, 2017, 1992, 1997, 1990, 1988, 2006, 2000)
+)
+```
+<br>
+
+**The 50 values of `year` in `pennies_resample` represent a resample of size 50 from the original sample of 50 pennies. Let’s compare the distribution of the numerical variable `year` of our 50 resampled pennies with the distribution of the numerical variable `year` of our original sample of 50 pennies.**
+
+```{r eval= FALSE}
+ggplot(pennies_resample, aes(x = year)) +
+  geom_histogram(binwidth = 10, color = "white") +
+  labs(title = "Resample of 50 pennies")
+
+ggplot(pennies_sample, aes(x = year)) +
+  geom_histogram(binwidth = 10, color = "white") +
+  labs(title = "Original sample of 50 pennies")
+```
+
+![](C:/Users/Den/Desktop/Learning/comppen.jpg)
+
+**While the general shapes of both distributions of year are roughly similar, they are not identical.**
+
+**What about the sample mean for our resample?**
+
+```{r}
+pennies_resample %>% 
+  summarize(mean_year = mean(year))
+```
+<br>
+**We obtained a different mean year of 1994.82. This variation is induced by the resampling with replacement we performed earlier.**
+
+**What if we repeated this resampling exercise many times? Would we obtain the same mean year each time? let’s perform this resampling activity with the help of some of our friends: 35 friends in total.**
+
+<br>
+
+### Resampling 35 times
+
+<br>
+**Each of our 35 friends will get 50 numbers, 50 times. For your convenience, we’ve taken these 35 x 50 = 1750 values and saved them in `pennies_resamples`, a “tidy” data frame included in the `moderndive` package.**
+
+```{r}
+# explore it
+glimpse(pennies_resamples)
+
+head(pennies_resamples, 10)
+```
+
+<br>
+**What did each of our 35 friends obtain as the mean year? group by `name`and `summarize` each group of 50 rows by their mean `year`:**
+
+```{r}
+resampled_means <- pennies_resamples %>% 
+  group_by(name) %>% 
+  summarize(mean_year = mean(year))
+
+head(resampled_means, 10)
+```
+
+<br>
+**Let’s visualize this variation using a histogram. Recall that adding the argument `boundary = 1990` to the `geom_histogram()` sets the binning structure so that one of the bin boundaries is at 1990 exactly.**
+
+```{r}
+ggplot(resampled_means, aes(x = mean_year)) +
+  geom_histogram(binwidth = 1, boundary = 1990, color = "white") +
+  labs(x = "Sampled mean year")
+```
+
+<br>
+**The distribution looks roughly normal and that we rarely observe sample mean years less than 1992 or greater than 2000. Also observe how the distribution is roughly centered at 1995, which is close to the sample mean of 1995.44 of the original sample of 50 pennies from the bank.**
+
+<br>
+
+## Computer simulation of resampling
+
+### Virtually resampling once
+
+<br>
+```{r}
+# use rep_sample_n() to perform the resampling with replacement of the 50 slips of paper representing our original sample 50 pennies:
+virtual_resample <- pennies_sample %>% 
+  rep_sample_n(size = 50, replace = TRUE)
+
+glimpse(virtual_resample)
+
+head(virtual_resample, 10)
+```
+
+<br>
+**Observe how we explicitly set the `replace` argument to `TRUE` in order to tell `rep_sample_n()` that we would like to sample pennies with replacement. Since we didn’t specify the number of replicates via the `reps` argument, the function assumes the default of one replicate `reps = 1`.**
+
+**Let’s now compute the mean year in our virtual resample:**
+
+```{r}
+virtual_resample %>% 
+  summarize(resample_mean = mean(year))
+```
+<br>
+
+### Virtually resampling 35 times
+
+<br>
+**Let’s first add a `reps = 35` argument to `rep_sample_n()` to indicate we would like 35 replicates.**
+
+```{r}
+virtual_resamples <- pennies_sample %>% 
+  rep_sample_n(size = 50, replace = TRUE, reps = 35)
+
+glimpse(virtual_resamples)
+
+head(virtual_resamples, 10)
+```
+
+<br>
+**Let’s now compute the resulting 35 sample means, but this time adding a `group_by(replicate)`**
+
+```{r}
+virtual_resampled_means <- virtual_resamples %>% 
+  group_by(replicate) %>% 
+  summarize(mean_year = mean(year))
+
+head(virtual_resampled_means, 10)
+```
+
+<br>
+**Let’s visualize this variation using a histogram.**
+
+```{r}
+ggplot(virtual_resampled_means, aes(x = mean_year)) +
+  geom_histogram(binwidth = 1, boundary = 1990, color = "white") +
+  labs(x = "Resample mean year")
+
+```
+
+<br>
+**Compare this virtually constructed bootstrap distribution with the one our 35 friends constructed via our tactile resampling exercise. Observe how they are somewhat similar, but not identical.**
+
+<br>
+
+### Virtually resampling 1000 times
+
+<br>
+**Let’s increase the number of resamples to 1000**
+
+```{r eval = FALSE}
+# Repeat resampling 1000 times
+virtual_resamples <- pennies_sample %>% 
+  rep_sample_n(size = 50, replace = TRUE, reps = 1000)
+
+# Compute 1000 sample means
+virtual_resampled_means <- virtual_resamples %>% 
+  group_by(replicate) %>% 
+  summarize(mean_year = mean(year))
+```
+<br>
+**For brevity, let’s combine these two operations into a single chain of pipe (%>%) operators:**
+
+```{r}
+virtual_resampled_means <- pennies_sample %>% 
+  rep_sample_n(size = 50, replace = TRUE, reps = 1000) %>% 
+  group_by(replicate) %>% 
+  summarize(mean_year = mean(year))
+
+glimpse(virtual_resampled_means)
+
+head(virtual_resampled_means, 10)
+```
+
+<br>
+**Let’s visualize the bootstrap distribution of these 1000 means based on 1000 virtual resamples:**
+
+```{r}
+ggplot(virtual_resampled_means, aes(x = mean_year)) +
+  geom_histogram(binwidth = 1, boundary = 1990, color = "white") +
+  labs(x = "sample mean")
+```
+
+<br>
+**Note here that the bell shape is starting to become much more apparent. We now have a general sense for the range of values that the sample mean may take on. But where is this histogram centered? Let’s compute the mean of the 1000 resample means:**
+
+
+```{r}
+virtual_resampled_means %>% 
+  summarize(mean_of_means = mean(mean_year))
+```
+
+<br>
+**The mean of these 1000 means is 1995.38, which is quite close to the mean of our original sample of 50 pennies of 1995.44.**
+
+<br>
+
+## Understanding confidence intervals
+
+<br>
+
+**We now introduce two methods for constructing such intervals in a more exact fashion: the percentile method and the standard error method.**
+
+### Percentile method
+
+<br>
+**One method to construct a confidence interval is to use the middle 95% of values of the bootstrap distribution. We can do this by computing the 2.5th and 97.5th percentiles, which are 1991.059 and 1999.283, respectively. This is known as the percentile method for constructing confidence intervals.**
+
+![](C:/Users/Den/Desktop/Learning/conffig.jpg)
+
+<br>
+
+### Standard error method
+
+<br>
+**We saw that if a numerical variable follows a normal distribution, or, in other words, the histogram of this variable is bell-shaped, then roughly 95% of values fall between ±1.96 standard deviations of the mean. Given that our bootstrap distribution based on 1000 resamples with replacement is normally shaped, let’s use this fact about normal distributions to construct a confidence interval in a different way.**
+
+**Let’s compute the standard deviation of the bootstrap distribution using the values of `mean_year` in the `virtual_resampled_means` data frame:**
+
+```{r}
+virtual_resampled_means %>% 
+  summarize(SE = sd(mean_year))
+```
+<br>
+**We can say that 2.164 is an approximation of the standard error of x̅**.
+
+**Using our 95% rule of thumb about normal distributions, we can use the following formula to determine the lower and upper endpoints of a 95% confidence interval for μ:**
+
+
+![](C:/Users/Den/Desktop/Learning/formhist.jpg)
+
+<br>
+**We see that both methods produce nearly identical 95% confidence intervals for μ with the percentile method yielding (1991.06, 1999.28) while the standard error method produces (1991.22, 1999.66). However, recall that we can only use the standard error rule when the bootstrap distribution is roughly normally shaped.**
+
+<br>
+
+## Constructing confidence intervals
+
+<br>
+
+### Original workflow
+
+<br>
+**We virtually performed bootstrap resampling with replacement to construct bootstrap distributions. Such distributions are approximations to the sampling distributions we saw in Chapter 7, but are constructed using only a single sample.**
+
+![](C:/Users/Den/Desktop/Learning/origflow.jpg)
+
+<br>
+**We can get by with using the `rep_sample_n()` function and a couple of `dplyr` verbs to construct the bootstrap distribution. For more complicated situations, we’ll need a little more firepower.**
+
+<br>
+
+### `infer` package workflow
+
+<br>
+**Let’s go back to our pennies. Previously, we computed the value of the sample mean x̅ using the dplyr function `summarize()`**
+
+```{r}
+pennies_sample %>% 
+  summarize(stats = mean(year))
+```
+
+<br>
+**We can also do this using `infer` functions `specify()` and `calculate()`:**
+
+```{r}
+pennies_sample %>% 
+  specify(response = year) %>% 
+  calculate(stat = "mean")
+```
+
+<br>
+**Let’s now illustrate the sequence of verbs necessary to construct a confidence interval for μ, the population mean year of minting of all US pennies in 2019.**
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/specif.jpg)
+
+![](C:/Users/Den/Desktop/Learning/resultspec.jpg)
+
+<br>
+**Notice how the data itself doesn’t change, but the `Response: year (numeric)` meta-data does. This is similar to how the `group_by()` verb from `dplyr` doesn’t change the data, but only adds “grouping” meta-data**
+
+**The following use of specify() with the formula argument yields the same result seen previously:**
+
+```{r eval=FALSE}
+pennies_sample %>% 
+  specify(formula = year ~ NULL)
+```
+
+<br>
+**Since in the case of pennies we only have a response variable and no explanatory variable of interest, we set the `x` on the right-hand side of the `~` to be `NULL`.**
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/replicdiag.jpg)
+
+<br>
+**The `generate()` function’s first argument is `reps`, which sets the number of replicates we would like to generate. Since we want to resample the 50 pennies in `pennies_sample` with replacement 1000 times, we set `reps = 1000`. The second argument type determines the type of computer simulation we’d like to perform. We set this to `type = "bootstrap"` indicating that we want to perform bootstrap resampling.**
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/bootsresa.jpg)
+
+<br>
+**We performed resampling of 50 pennies with replacement 1000 times and 50,000 = 50 x 1000. The variable `replicate` indicates which resample each row belongs to. So it has the value `1` 50 times, the value `2` 50 times, all the way through to the value `1000` 50 times.** 
+
+**The default value of the type argument is `"bootstrap"` in this scenario, so if the last line was written as `generate(reps = 1000)`, we’d obtain the same results.**
+
+**So far comparing infer workflow to the original, the following two code chunks produce similar results:**
+
+![](C:/Users/Den/Desktop/Learning/bothwork.jpg)
+
+<br>
+
+![](C:/Users/Den/Desktop/Learning/step3cal.jpg)
+
+<br>
+**We want to calculate the mean `year` for each bootstrap resample of size 50. To do so, we set the `stat` argument to `"mean"`. You can also set the `stat` argument to a variety of other common summary statistics, like `"median"`, `"sum"`, `"sd"` (standard deviation), and `"prop"` (proportion).**
+
+**Let’s save the result in a data frame called `bootstrap_distribution` and explore its contents:**
+
+```{r}
+bootstrap_distribution <- pennies_sample %>% 
+  specify(response = year) %>% 
+  generate(reps = 1000) %>% 
+  calculate(stat = "mean")
+
+glimpse(bootstrap_distribution)
+
+head(bootstrap_distribution, 10)
+```
+<br>
+**Compare both worflows for similarities:**
+
+![](C:/Users/Den/Desktop/Learning/compsimi.jpg)
+ 
+ <br>
+ 
+ ![](C:/Users/Den/Desktop/Learning/visualex.jpg)
+ 
+ <br>
+ **The `visualize()` verb provides a quick way to visualize the bootstrap distribution as a histogram of the numerical stat variable’s values.**
+ 
+```{r}
+visualize(bootstrap_distribution)
+```
+ 
+ <br>
+ **Comparing to original workflow:**
+ 
+ ![](C:/Users/Den/Desktop/Learning/comporig4.jpg)
+ 
+ ![](C:/Users/Den/Desktop/Learning/recap1.jpg)
+<br> 
+ 
+### Percentile method with `infer`
+
+<br> 
+**We can compute the 95% confidence interval by piping `bootstrap_distribution` into the `get_confidence_interval()` function from the `infer` package, with the confidence `level` set to 0.95 and the confidence interval `type` to be `"percentile"`. Let’s save the results in `percentile_ci`.**
+ 
+```{r}
+percentile_ci <- bootstrap_distribution %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+
+percentile_ci
+```
+ 
+<br> 
+**Alternatively, we can visualize the interval (1991.12, 1999.36) inside the graph by using `visualize()` function and adding a `shade_confidence_interval()` layer. Set the `endpoints` argument to be `percentile_ci`.** 
+ 
+```{r}
+visualize(bootstrap_distribution) +
+  shade_confidence_interval(endpoints = percentile_ci)
+```
+
+<br>
+**A shorter version with `shade_ci` and modifying colors:**
+
+```{r}
+visualize(bootstrap_distribution) + 
+  shade_ci(endpoints = percentile_ci, color = "hotpink", fill = "khaki")
+```
+
+<br>
+
+### Standard error method with `infer`
+
+<br>
+
+**This time we set the first type argument to be `"se"`. Second, we must specify the `point_estimate` argument in order to set the center of the confidence interval. We set this to be the sample mean of the original sample of 50 pennies of 1995.44 we saved in `x_bar` earlier.**
+
+```{r}
+standard_error_ci <- bootstrap_distribution %>% 
+  get_confidence_interval(type = "se", point_estimate = x_bar)
+
+standard_error_ci
+```
+
+<br>
+**Visualize the confidence interval:**
+
+```{r}
+visualize(bootstrap_distribution) +
+  shade_confidence_interval(endpoints = standard_error_ci) # remember shade_ci too
+```
+
+<br>
+**Both methods produce similar confidence intervals.**
+
+<br>
+
+## Interpreting confidence intervals
+
+<br>
+
+**In order to interpret a confidence interval’s effectiveness, we need to know what the value of the population parameter is. That way we can say whether or not a confidence interval “captured” this value.**
+
+
+**What proportion of the bowl’s 2400 balls are red?**
+
+```{r}
+bowl %>% 
+  summarize(p_red = mean(color == "red"))
+```
+
+<br>
+**In this case, we know what the value of the population parameter is: we know that the population proportion *p* is 0.375 (37.5% of the balls are red). In real life, we won’t know what the true value of the population parameter is, hence the need for estimation.**
+
+<br>
+
+###  Did the net capture the fish?
+
+<br>
+**Recall that we had 33 groups of friends each take samples of size 50 from the bowl and then compute the sample proportion of red balls. Let’s focus on Ilyas and Yohan’s sample, which is saved in the `bowl_sample_1` of `moderndive` package.**
+
+```{r}
+glimpse(bowl_sample_1)
+
+head(bowl_sample_1, 10)
+```
+<br>
+**They observed 21 red balls out of 50 and thus their sample proportion was 21/50 = 0.42 = 42%.**
+
+1. `specify` variables
+
+<br>
+
+```{r eval=FALSE}
+# We need to define which event is of interest! red or white in the success argument.
+bowl_sample_1 %>% 
+  specify(response = color, success = "red")
+```
+
+![](C:/Users/Den/Desktop/Learning/succ1.jpg)
+
+<br>
+
+2. `generate` replicates
+
+<br>
+**1000 replicates of bootstrap resampling with replacement from bowl_sample_1**
+
+```{r eval=FALSE}
+bowl_sample_1 %>% 
+  specify(response = color, success = "red") %>% 
+  generate(reps = 1000, type = "bootstrap")
+```
+![](C:/Users/Den/Desktop/Learning/succ2.jpg)
+
+<br>
+**The variable `replicate` indicates which resample each row belongs to. So it has the value `1` 50 times, the value `2` 50 times, all the way through to the value `1000` 50 times.**
+
+<br>
+
+3. `calculate` summary statistics
+
+<br>
+**We summarize each of the 1000 resamples of size 50 with the proportion of successes (red balls). We can set the summary statistic to be calculated as the proportion by setting the `stat` argument to be `"prop"`.**
+
+```{r}
+#  Let’s save the result as sample_1_bootstrap:
+sample_1_bootstrap <- bowl_sample_1 %>% 
+  specify(response = color, success = "red") %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "prop")
+
+glimpse(sample_1_bootstrap)
+
+head(sample_1_bootstrap, 10)
+```
+<br>
+
+4. `visualize` the results
+
+<br>
+**Let’s compute the resulting 95% confidence interval:**
+
+```{r}
+percentile_ci_1 <- sample_1_bootstrap %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+
+percentile_ci_1
+```
+
+<br>
+**We'll use `geom_vline()` and add a dashed vertical line at Ilyas and Yohan’s observed p̂=21/50=0.42=42%.**
+
+```{r}
+sample_1_bootstrap %>% 
+  visualize(bins = 15) +
+  shade_confidence_interval(endpoints = percentile_ci_1) +
+  geom_vline(xintercept = 0.42, linetype = "dashed")
+```
+
+<br>
+**Did their 95% confidence interval for *p* based on their sample contain the true value of *p* of 0.375? Yes! 0.375 is between the endpoints of their confidence interval (0.28, 0.56).**
+
+**However, will every 95% confidence interval for *p* capture this value? if we had a different sample of 50 balls and constructed a different confidence interval, would it necessarily contain *p* = 0.375 as well? Let’s first take a different sample from the bowl**
+ 
+```{r}
+bowl_sample_2 <- bowl %>% rep_sample_n(size = 50)
+
+glimpse(bowl_sample_2)
+
+head(bowl_sample_2, 10)
+```
+ 
+<br>
+**Let's repeate the same steps:**
+ 
+```{r}
+sample_2_bootstrap <- bowl_sample_2 %>% 
+  specify(response = color, 
+          success = "red") %>% 
+  generate(reps = 1000, 
+           type = "bootstrap") %>% 
+  calculate(stat = "prop")
+
+glimpse(sample_2_bootstrap)
+
+head(sample_2_bootstrap, 10)
+```
+
+<br>
+**Compute a percentile-based 95% confidence interval for *p*:**
+
+```{r}
+percentile_ci_2 <- sample_2_bootstrap %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+
+percentile_ci_2
+```
+
+<br>
+**Again, the 95% confidence interval for *p* contain the true value of *p* of 0.375 (CI 0.3, 0.58).**
+
+<br>
+
+### Wrong, precise and shorthand interpretation
+
+<br>
+
+> Wrong interpretation: “There is a 95% probability that the confidence interval contains *p*". Why wrong? because each confidence interval either does or does not contain *p*.
+
+> Precise interpretation: If we repeated our sampling procedure a large number of times, we expect about 95% of the resulting confidence intervals to capture the value of the population parameter.
+
+> Short-hand interpretation: We are 95% “confident” that a 95% confidence interval captures the value of the population parameter.
+
+**Back to our example, we are 95% “confident” that the true mean year of pennies in circulation in 2019 is somewhere between 1991.12 and 1999.36.**
+
+<br>
+
+#### Extra key points:
+
+> The bootstrap distribution will likely not have the same center as the sampling distribution. In other words, bootstrapping cannot improve the quality of an estimate.
+
+> Even if the bootstrap distribution might not have the same center as the sampling distribution, it will likely have very similar shape and spread. In other words, bootstrapping will give you a good estimate of the standard error.
+
+
+
+
+
+
+
+
+ 
+ 

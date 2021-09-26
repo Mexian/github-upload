@@ -1,0 +1,2 @@
+"0","visualize(null_distribution, bins = 10) +"
+"0","  shade_p_value(obs_stat = obs_diff_prop, direction = ""right"")"
